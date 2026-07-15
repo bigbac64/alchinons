@@ -1,5 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { useInventory } from "../hooks/useInventory";
+import ButtonHold from "../components/Button/ButtonHold.jsx";
+import Button from "../components/Button/Button.jsx";
 
 function Home() {
   const inventory = useInventory();
@@ -14,13 +16,14 @@ function Home() {
       <p className="mb-8 text-sm text-slate-400 uppercase tracking-widest">Atelier d'alchimie</p>
 
       <div className="mb-6">
-        <button
+        <Button
+          variant="dumper"
+          onComplete={gather}
           onClick={gather}
-          className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-5 py-2.5 font-semibold text-white shadow-lg shadow-emerald-900/40 hover:bg-emerald-500 active:scale-95 transition-all"
         >
           <span>⚗</span>
           Récolter
-        </button>
+        </Button>
       </div>
 
       <div className="rounded-xl border border-slate-700 bg-[#161d2e] overflow-hidden shadow-xl">
