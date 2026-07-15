@@ -35,7 +35,6 @@ pub fn run() {
 
                    drop(engine);
 
-                   println!("runned events");
                    for ev in events {
                        app_handle.emit(ev.name(), ev.payload()).ok();
                    }
