@@ -7,8 +7,6 @@ import MapLegend from "../components/map/MapLegend.jsx";
 function MapContent() {
   const { currentTile, feedback } = usePlayer();
 
-  const canGather = Boolean(currentTile?.gather);
-
   async function gather() {
     await invoke("engine", { command: "Gather" });
   }
@@ -29,13 +27,6 @@ function MapContent() {
           <div className="rounded-xl border border-slate-700 bg-[#161d2e] p-4">
             <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-400">Case actuelle</h2>
             <p className="mt-2 text-lg text-slate-100">{currentTile?.label ?? "—"}</p>
-            <button
-              onClick={gather}
-              disabled={!canGather}
-              className="mt-4 w-full rounded-lg bg-emerald-600 px-4 py-2 font-semibold text-white shadow-lg shadow-emerald-900/40 transition-all hover:bg-emerald-500 active:scale-95 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400 disabled:shadow-none"
-            >
-              ⚗ Fouiller
-            </button>
           </div>
 
           {feedback && (

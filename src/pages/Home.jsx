@@ -19,7 +19,17 @@ function Home() {
         <Button
           variant="dumper"
           onComplete={gather}
-          onClick={gather}
+        >
+          <span>⚗</span>
+          Récolter
+        </Button>
+      </div>
+
+      <div className="mb-6">
+        <Button
+          variant="hold"
+          holdDuration={2000}
+          onComplete={gather}
         >
           <span>⚗</span>
           Récolter
