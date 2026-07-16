@@ -6,6 +6,7 @@ function Layout() {
       <nav id="nav" className="flex justify-center gap-6 border-b border-slate-700 bg-[#161d2e] p-4 shadow-md">
         <Link to="/" className="font-medium text-slate-300 hover:text-emerald-400 transition-colors">Accueil</Link>
         <Link to="/settings" className="font-medium text-slate-300 hover:text-emerald-400 transition-colors">Paramètres</Link>
+        <Link to="/carte" className="font-medium text-slate-300 hover:text-emerald-400 transition-colors">Carte</Link>
       </nav>
       <Outlet />
     </div>
