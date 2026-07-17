@@ -25,11 +25,18 @@ impl Map {
     pub fn matrix_cost(&self) -> Vec<Vec<u32>> {
         self.map.iter()
             .map(|row| row.iter()
-                .map(|&cell| cell.definition().movement_cost)
+                .map(|&cell| {
+                    let def = cell.definition();
+                    if def.walkable {
+                        def.movement_cost
+                    } else {
+                        0
+                    }
+                })
                 .collect())
             .collect()
     }
-    
+
     pub fn get_terrain(&self, position: Position) -> Terrain {
         self.map[position.y as usize][position.x as usize]
     }

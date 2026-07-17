@@ -44,30 +44,32 @@ export const PlayerProvider = ({ children }) => {
     [position, isMoving, map]
   );
 
-  listen('move_path', (event) => {
-    console.log(event)
-    let path = event?.payload
+  useEffect(() => {
+    const unlistenPromise = listen('move_path', (event) => {
+      console.log(event)
+      let path = event?.payload
 
-    if (!path || path.length < 2) {
-      if (!path) setFeedback('Aucun chemin possible vers cette case.');
-      return;
-    }
-
-    setFeedback(null);
-    setIsMoving(true);
-
-    let step = 1;
-    const interval = setInterval(() => {
-      setPosition(path[step]);
-      step += 1;
-      if (step >= path.length) {
-        clearInterval(interval);
-        setIsMoving(false);
+      if (!path || path.length < 2) {
+        if (!path) setFeedback('Aucun chemin possible vers cette case.');
+        return;
       }
-    }, STEP_DURATION_MS);
-  })
 
+      setFeedback(null);
+      setIsMoving(true);
 
+      let step = 1;
+      const interval = setInterval(() => {
+        setPosition(path[step]);
+        step += 1;
+        if (step >= path.length) {
+          clearInterval(interval);
+          setIsMoving(false);
+        }
+      }, STEP_DURATION_MS);
+    })
+
+    return () => unlistenPromise.then((fn) => fn())
+  }, []);
 
   const value = {
     position,
