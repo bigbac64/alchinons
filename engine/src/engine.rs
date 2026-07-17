@@ -32,7 +32,8 @@ impl GameEngine {
         // remonte d'enventuel event
         let events = match command {
             Command::Gather => self.gather_system.execute(&mut self.states),
-            Command::Move {direction} => vec![],
+            Command::GetMap => self.states.map.to_view(),
+            Command::Move {position} => vec![],
         };
 
         if !events.is_empty() {

@@ -1,5 +1,5 @@
 use crate::states::GameState;
-use crate::definitions::loot::Looting;
+use crate::services::loot::Looting;
 use crate::events::Event;
 
 pub struct GatherSystem {}

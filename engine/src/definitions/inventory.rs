@@ -21,7 +21,6 @@ impl Inventory {
         for (key, value) in resources {
             self.add(key, value)
         }
-        println!("{:?}", self.content)
     }
 
     pub fn to_view(&self) -> InventoryView {

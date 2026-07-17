@@ -1,9 +1,13 @@
 use serde::Deserialize;
+use crate::definitions::position::Position;
 
 #[derive(Deserialize)]
 pub enum Command {
     Gather,
     Move {
-        direction: u32
-    }
+        position: Position
+    },
+    
+    /// Getter
+    GetMap,
 }
