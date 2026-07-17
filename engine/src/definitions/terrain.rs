@@ -1,4 +1,7 @@
+use std::collections::HashMap;
+use serde::Serialize;
 use crate::definitions::resources::{LootEntry, Resource};
+use crate::views::terrain::{TerrainDefinitionView, TerrainView};
 
 const VOID: TerrainDefinition = TerrainDefinition {
     walkable: false,
@@ -47,7 +50,7 @@ const CLIFF: TerrainDefinition = TerrainDefinition {
 
 const CAMP: TerrainDefinition = TerrainDefinition {
     walkable: true,
-    movement_cost: 0,
+    movement_cost: 1,
     loot: &[],
 };
 
@@ -73,10 +76,33 @@ impl Terrain {
             Terrain::Cliff => &CLIFF,
         }
     }
+
+    pub fn view() -> TerrainView {
+        TerrainView {
+            terrain: HashMap::from([
+                ("void".to_string(), VOID.to_view()),
+                ("camp".to_string(), CAMP.to_view()),
+                ("plain".to_string(), PLAIN.to_view()),
+                ("forest".to_string(), FOREST.to_view()),
+                ("water".to_string(), WATER.to_view()),
+                ("cliff".to_string(), CLIFF.to_view()),
+            ])
+        }
+    }
 }
 
+#[derive(Serialize)]
 pub struct TerrainDefinition {
     pub walkable: bool,
     pub movement_cost: u32,
     pub loot: &'static [LootEntry],
+}
+
+impl TerrainDefinition {
+    pub fn to_view(&self) -> TerrainDefinitionView {
+        TerrainDefinitionView {
+            walkable: self.walkable,
+            cost: self.movement_cost,
+        }
+    }
 }

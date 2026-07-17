@@ -1,11 +1,13 @@
 use crate::definitions::position::Position;
 
 pub struct Player {
-    position: Position
+    pub position: Position
 }
 
-pub fn new_player() -> Player {
-    Player {
-        position: Position { x: 4, y: 4 }
+impl Player {
+    pub fn new() -> Player {
+        Player {
+            position: Position { x: 4, y: 4 }
+        }
     }
 }

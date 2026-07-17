@@ -1,15 +1,20 @@
-import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import React, {createContext, useCallback, useContext, useEffect, useMemo, useState} from 'react';
 import Vector from '../../utils/vector.js';
 import Matrix from '../../utils/matrix.js';
 import Hexagon from '../../utils/hexagone.js';
-import { HEX_SIZE, HEX_GAP, MAP_LAYOUT, TERRAIN } from '../../config/mapConfig.js';
+import { HEX_SIZE, HEX_GAP, TERRAIN } from '../../config/mapConfig.js';
+import {invoke} from "@tauri-apps/api/core";
 
 const MapContext = createContext(null);
 
-const buildMap = () => {
+const buildMap = async () => {
   const matrix = new Matrix();
-  matrix.make(new Vector(MAP_LAYOUT[0].length, MAP_LAYOUT.length), (at) => ({
-    ...TERRAIN[MAP_LAYOUT[at.y][at.x]],
+  let {data: {map}} = await invoke('engine', { command: "GetMap" })
+  if (!map) return
+
+  console.log(map)
+  matrix.make(new Vector(map[0].length, map.length), (at) => ({
+    ...TERRAIN[map[at.y][at.x]],
   }));
   return matrix;
 };
@@ -19,20 +24,32 @@ const buildMap = () => {
  * conversion logique <-> pixel nécessaires au rendu et au pathfinding.
  */
 export const MapProvider = ({ children }) => {
-  const [map] = useState(buildMap);
+  const [terrain, setTerrain] = useState();
+  const [map, setMap] = useState();
   const [cell] = useState(() => new Hexagon(HEX_SIZE));
 
   const viewBox = useMemo(() => {
-    const size = cell.calculateFullSize(map.length.x, map.length.y, HEX_GAP);
+    if(!map) return
+
+    const size = cell.calculateFullSize(map?.length.x, map?.length.y, HEX_GAP);
     return [0, 0, size.x, size.y];
   }, [cell, map]);
 
   const toPixel = useCallback((at) => cell.next(at, HEX_GAP), [cell]);
-  const getTile = useCallback((at) => map.get(at), [map]);
+  const getTile = useCallback((at) => map?.get(at), [map]);
+
+  useEffect(() => {
+    buildMap().then(setMap)
+  }, []);
+
+  useEffect(() => {
+    invoke('engine', { command: "GetTerrain" })
+      .then(({data: {terrain}}) => setTerrain(terrain))
+  }, []);
 
   const value = useMemo(
-    () => ({ map, cell, viewBox, toPixel, getTile }),
-    [map, cell, viewBox, toPixel, getTile]
+    () => ({ map, cell, terrain, viewBox, toPixel, getTile }),
+    [map, cell, terrain, viewBox, toPixel, getTile]
   );
 
   return <MapContext.Provider value={value}>{children}</MapContext.Provider>;

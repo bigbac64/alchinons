@@ -1,6 +1,6 @@
-use serde::Deserialize;
+use serde::{Serialize};
 
-#[derive(Deserialize)]
+#[derive(Serialize)]
 pub struct MapView {
     pub(crate) map: Vec<Vec<String>>
 }

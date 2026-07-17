@@ -22,28 +22,26 @@ pub struct PathNode {
 }
 
 
+/// Convertit une position offset (odd-q) en coordonnées cubiques.
+/// Nécessaire pour calculer la vraie distance hexagonale.
+fn to_cube(p: Position) -> (i32, i32, i32) {
+    let x = p.x as i32;
+    let z = p.y as i32 - (x - (x & 1)) / 2;
+    (x, -x - z, z)
+}
 
-/// fonction de calcul de la distance hexagonale entre deux positions.
-/// Permettant de calculer la distance entre deux positions sur une grille hexagonale.
-/// utilisable pour de l'heuristique dans l'algorithme A*.
+/// Distance hexagonale entre deux positions sur une grille odd-q offset.
+/// Utilise les coordonnées cubiques pour un résultat exact et symétrique.
 pub fn hex_distance(a: Position, b: Position) -> u32 {
-    let dx = b.x as i32 - a.x as i32;
-    let dy = b.y as i32 - a.y as i32;
-    let adx = dx.unsigned_abs();
-    let ady = dy.unsigned_abs();
-
-    // Les diagonales (-1,1) et (1,1) vont toutes les deux vers le bas (dy > 0).
-    // Vers le bas : un pas diagonal couvre x et y → distance = max(adx, ady).
-    // Vers le haut : seul (0,-1) est disponible → adx + ady pas séparés.
-    if dy >= 0 {
-        adx.max(ady)
-    } else {
-        adx + ady
-    }
+    let (ax, ay, az) = to_cube(a);
+    let (bx, by, bz) = to_cube(b);
+    (ax - bx).unsigned_abs()
+        .max((ay - by).unsigned_abs())
+        .max((az - bz).unsigned_abs())
 }
 
 
-fn search<F>(start: Position, goal: Position, matrix: &Vec<Vec<u32>>, heuristic: F) -> Option<Vec<Position>>
+pub fn search<F>(start: Position, goal: Position, matrix: &Vec<Vec<u32>>, heuristic: F) -> Option<Vec<Position>>
 where
     F: Fn(Position, Position) -> u32,
 {
@@ -61,15 +59,6 @@ where
             parent: None,
         },
     );
-
-    const DIRECTIONS_HEX: [(i32, i32); 6] = [
-        (0, -1),
-        (1, 0),
-        (-1, 1),
-        (1, 1),
-        (0, 1),
-        (-1, 0),
-    ];
 
     while let Some(Reverse((_, current))) = open.pop() {
         if current == goal {
@@ -93,7 +82,14 @@ where
 
         let current_cost = nodes[&current].g;
 
-        for (dx, dy) in DIRECTIONS_HEX {
+        // Grille odd-q offset : les voisins dépendent de la parité de la colonne.
+        let directions: [(i32, i32); 6] = if current.x % 2 == 0 {
+            [(0, -1), (1, -1), (1, 0), (0, 1), (-1, 0), (-1, -1)]
+        } else {
+            [(0, -1), (1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0)]
+        };
+
+        for (dx, dy) in directions {
             let nx = current.x as i32 + dx;
             let ny = current.y as i32 + dy;
 
@@ -222,13 +218,25 @@ mod tests {
 
     #[test]
     fn hex_distance_direct_neighbours() {
-        // Chaque voisin direct doit être à distance 1.
-        // Directions : (0,-1),(1,0),(-1,1),(1,1),(0,1),(-1,0)
-        let center = pos(3, 3);
-        let neighbours = [pos(3,2), pos(4,3), pos(2,4), pos(4,4), pos(3,4), pos(2,3)];
-        for n in neighbours {
-            assert_eq!(hex_distance(center, n), 1, "distance vers {:?} devrait être 1", n);
+        // Colonne paire (x=2) : voisins selon odd-q even-column
+        let center_even = pos(2, 2);
+        let neighbours_even = [pos(2,1), pos(3,1), pos(3,2), pos(2,3), pos(1,2), pos(1,1)];
+        for n in neighbours_even {
+            assert_eq!(hex_distance(center_even, n), 1, "even: distance vers {:?} devrait être 1", n);
         }
+
+        // Colonne impaire (x=3) : voisins selon odd-q odd-column
+        let center_odd = pos(3, 3);
+        let neighbours_odd = [pos(3,2), pos(4,3), pos(4,4), pos(3,4), pos(2,4), pos(2,3)];
+        for n in neighbours_odd {
+            assert_eq!(hex_distance(center_odd, n), 1, "odd: distance vers {:?} devrait être 1", n);
+        }
+    }
+
+    #[test]
+    fn hex_distance_symetrique() {
+        // Avec les coordonnées cubiques, la distance est symétrique.
+        assert_eq!(hex_distance(pos(1, 1), pos(5, 4)), hex_distance(pos(5, 4), pos(1, 1)));
     }
 
     #[test]
@@ -272,15 +280,20 @@ mod tests {
 
     #[test]
     fn path_consecutive_positions_are_neighbours() {
-        // Chaque étape du chemin doit être un voisin hexagonal valide.
+        // Chaque étape du chemin doit être un voisin hexagonal valide (odd-q offset).
         let matrix = uniform_grid(8, 8);
         let path = search(pos(1, 1), pos(6, 5), &matrix, zero_heuristic)
             .expect("un chemin doit exister");
         for window in path.windows(2) {
-            let dx = window[1].x as i32 - window[0].x as i32;
+            let src_x = window[0].x;
+            let dx = window[1].x as i32 - src_x as i32;
             let dy = window[1].y as i32 - window[0].y as i32;
-            let valid_moves: [(i32, i32); 6] = [(0,-1),(1,0),(-1,1),(1,1),(0,1),(-1,0)];
-            assert!(valid_moves.contains(&(dx, dy)), "pas invalide: ({dx},{dy})");
+            let valid_moves: [(i32, i32); 6] = if src_x % 2 == 0 {
+                [(0,-1),(1,-1),(1,0),(0,1),(-1,0),(-1,-1)]
+            } else {
+                [(0,-1),(1,0),(1,1),(0,1),(-1,1),(-1,0)]
+            };
+            assert!(valid_moves.contains(&(dx, dy)), "pas invalide depuis col {src_x}: ({dx},{dy})");
         }
     }
 }

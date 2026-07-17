@@ -7,6 +7,7 @@ pub enum Resource {
 }
 
 
+#[derive(Serialize)]
 pub struct LootEntry {
     pub resource: Resource,
     pub infallible: u32,

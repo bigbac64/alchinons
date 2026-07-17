@@ -1,5 +1,8 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use crate::definitions::position::Position;
+use crate::views::inventory::InventoryView;
+use crate::views::map::MapView;
+use crate::views::terrain::TerrainView;
 
 #[derive(Deserialize)]
 pub enum Command {
@@ -7,7 +10,18 @@ pub enum Command {
     Move {
         position: Position
     },
-    
+
     /// Getter
     GetMap,
+    GetTerrain,
+}
+
+
+#[derive(Serialize)] 
+#[serde(tag = "type", content = "data")]
+pub enum CommandOutput {
+    Map(MapView),
+    Inventory(InventoryView),
+    Terrain(TerrainView),
+    None,
 }

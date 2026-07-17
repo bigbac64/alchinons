@@ -1,3 +1,4 @@
+use crate::definitions::position::Position;
 use crate::definitions::terrain::Terrain;
 use crate::views::map::MapView;
 
@@ -12,13 +13,25 @@ impl Map {
         }
     }
 
-    pub fn from_array<const H: usize, const W: usize>(array: &[&[Terrain; H]; W])  -> Self {
+    pub fn from_array<const H: usize, const W: usize>(array: &[[Terrain; 11]; 10]) -> Self {
         Self {
             map: array.iter()
                 .map(|row| row.iter()
                     .map(|&cell| cell).collect())
                 .collect()
         }
+    }
+
+    pub fn matrix_cost(&self) -> Vec<Vec<u32>> {
+        self.map.iter()
+            .map(|row| row.iter()
+                .map(|&cell| cell.definition().movement_cost)
+                .collect())
+            .collect()
+    }
+    
+    pub fn get_terrain(&self, position: Position) -> Terrain {
+        self.map[position.y as usize][position.x as usize]
     }
 
     pub fn to_view(&self) -> MapView {

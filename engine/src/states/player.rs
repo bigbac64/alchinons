@@ -1,14 +1,13 @@
-use crate::definitions::terrain::Terrain;
-
+use crate::ecs::player::Player;
 
 pub struct PlayerState {
-    pub(crate) location: Terrain
+    pub(crate) player: Player,
 }
 
 impl PlayerState {
     pub fn new() -> Self {
         Self {
-            location: Terrain::Plain
+            player: Player::new()
         }
     }
 }

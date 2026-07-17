@@ -15,7 +15,7 @@ const ZOOM_STEP = 0.15;
  * zoom (molette + boutons) et un indicateur de déplacement en cours.
  */
 const HexGrid = ({ className = '' }) => {
-  const { map, cell, viewBox, toPixel } = useMap();
+  const { map, terrain: data_terrain, cell, viewBox, toPixel } = useMap();
   const { position, moveTo, isMoving } = usePlayer();
   const [hovered, setHovered] = useState(null);
   const [zoom, setZoom] = useState(1);
@@ -56,7 +56,8 @@ const HexGrid = ({ className = '' }) => {
               at={at}
               position={toPixel(at)}
               cell={cell}
-              terrain={terrain}
+              walkable={data_terrain?.[terrain?.id]?.walkable}
+              color={terrain?.color}
               isHovered={Boolean(hovered) && hovered.x === at.x && hovered.y === at.y}
               isCurrent={position.x === at.x && position.y === at.y}
               onClick={moveTo}

@@ -16,7 +16,7 @@ impl GameState {
         Self {
             inventory: inventory::InventoryState::new(),
             player: player::PlayerState::new(),
-            map: ecs::map::Map::from_array::<11, 10>(MAP_LAYOUT),
+            map: ecs::map::Map::from_array::<11, 10>(&MAP_LAYOUT),
         }
     }
 }
