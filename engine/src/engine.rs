@@ -3,16 +3,20 @@ use std::sync::Arc;
 use tokio::sync::Notify;
 pub use crate::commands::Command;
 use crate::commands::CommandOutput;
+use crate::definitions::inventory::Inventory;
 use crate::definitions::terrain::Terrain;
 use crate::events::Event;
 use crate::states::GameState;
 use crate::systems::gather::GatherSystem;
 use crate::systems::moving::MoveSystem;
+use crate::systems::transfert::{TransferInventorySystem};
+use crate::views::inventory::InventoryView;
 
 pub struct GameEngine {
     states: GameState,
     gather_system: GatherSystem,
     move_system: MoveSystem,
+    transfer_system: TransferInventorySystem,
     events: Vec<Event>,
     notify: Arc<Notify>, // Arc = partage l'objet avec un autrer
 }
@@ -24,6 +28,7 @@ impl GameEngine {
             states: GameState::new(),
             gather_system: GatherSystem::new(),
             move_system: MoveSystem::new(),
+            transfer_system: TransferInventorySystem::new(),
             events: Vec::new(),
             notify,
         }
@@ -50,6 +55,18 @@ impl GameEngine {
             Command::Move {position} => {
                 events = self.move_system.execute(position, &mut self.states);
                 CommandOutput::None
+            },
+            Command::TransferInventory {source, destination} => {
+                events =self.transfer_system.execute(source, destination, &mut self.states);
+                CommandOutput::None
+            },
+            Command::GetInventory {name} => {
+                CommandOutput::Inventory(
+                    self.states.inventory.get_by_name(
+                        name.as_str()
+                    ).unwrap_or(&Inventory::new(name))
+                        .to_view()
+                )
             },
         };
 

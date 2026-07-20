@@ -1,12 +1,37 @@
 import { useEffect, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
+import {invoke} from "@tauri-apps/api/core";
 
 export function useInventory() {
-  const [inventory, setInventory] = useState({ items: [] });
+  const [player, setPlayer] = useState(undefined);
+  const [warehouse, setWarehouse] = useState(undefined);
+
+  useEffect(() => {
+    if (player === undefined) {
+      invoke("engine", {command: {GetInventory: {name: "player"}}})
+        .then(({data: {inventory}}) => {
+
+          console.log(inventory)
+          setPlayer(inventory)
+        })
+    } else if (warehouse === undefined) {
+      invoke("engine", {command: {GetInventory: {name: "warehouse"}}})
+        .then(({data: {inventory}}) => setWarehouse(inventory))
+    }
+
+  }, []);
 
   useEffect(() => {
     const unlisten = listen("inventory_update", (event) => {
-      setInventory(event.payload);
+      const items = {items: event.payload.items}
+      switch (event.payload.name){
+        case "player":
+          setPlayer(items);
+          break;
+        case "warehouse":
+          setWarehouse(items);
+          break;
+      }
     });
 
     return () => {
@@ -14,5 +39,5 @@ export function useInventory() {
     };
   }, []);
 
-  return inventory;
+  return {player, warehouse};
 }

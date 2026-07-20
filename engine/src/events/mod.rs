@@ -5,7 +5,7 @@ use crate::views::inventory::InventoryView;
 
 pub mod inventory;
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub enum Event {
     InventoryUpdated { changes: InventoryView },
     MovePath {path: Vec<Position>},
@@ -21,7 +21,7 @@ impl Event {
 
     pub fn payload(&self) -> Value {
         match self {
-            Event::InventoryUpdated {changes} => json!(changes),
+            Event::InventoryUpdated {changes} => { json!(changes) },
             Event::MovePath {path} => json!(path),
         }
     }

@@ -1,6 +1,6 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Eq, Hash, PartialEq, Copy, Clone, Debug, Serialize)]
+#[derive(Eq, Hash, PartialEq, Copy, Clone, Debug, Serialize, Deserialize)]
 pub enum Resource {
     Wood,
     Stone,

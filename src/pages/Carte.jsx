@@ -5,6 +5,10 @@ import HexGrid from "../components/map/HexGrid.jsx";
 import MapLegend from "../components/map/MapLegend.jsx";
 
 function MapContent() {
+
+}
+
+function Carte() {
   const { currentTile, feedback } = usePlayer();
 
   async function gather() {
@@ -39,16 +43,6 @@ function MapContent() {
         </div>
       </div>
     </div>
-  );
-}
-
-function Carte() {
-  return (
-    <MapProvider>
-      <PlayerProvider>
-        <MapContent />
-      </PlayerProvider>
-    </MapProvider>
   );
 }
 

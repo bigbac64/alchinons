@@ -9,6 +9,7 @@ impl GatherSystem {
     pub fn new() -> Self {Self {}}
     pub fn execute(&self, states: &mut GameState) -> Vec<Event>{
         let terrain = states.map.get_terrain(states.player.player.position);
+        println!("Gathered resources: {:?}", terrain);
         let resources = Looting::generate(terrain);
 
         states.inventory.player.add_multi(resources);

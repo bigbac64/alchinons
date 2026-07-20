@@ -10,10 +10,17 @@ pub enum Command {
     Move {
         position: Position
     },
+    TransferInventory {
+        source: InventoryView,
+        destination: InventoryView,
+    },
 
     /// Getter
     GetMap,
     GetTerrain,
+    GetInventory {
+        name: String,
+    },
 }
 
 

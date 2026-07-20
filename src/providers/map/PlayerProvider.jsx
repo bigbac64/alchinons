@@ -16,12 +16,10 @@ const FEEDBACK_DURATION_MS = 2500;
  */
 export const PlayerProvider = ({ children }) => {
   const { map, terrain } = useMap();
-  if (!map) return
 
   const [position, setPosition] = useState(new Vector(START_POSITION.x, START_POSITION.y));
   const [isMoving, setIsMoving] = useState(false);
   const [feedback, setFeedback] = useState(null);
-
 
   useEffect(() => {
     if (!feedback) return undefined;
@@ -31,32 +29,26 @@ export const PlayerProvider = ({ children }) => {
 
   const moveTo = useCallback(
     async (target) => {
-      if (isMoving) return;
-
+      if (isMoving || !map) return;
       const destination = terrain[map.get(target).id];
       if (!destination?.walkable) {
         setFeedback("Cette case n'est pas praticable.");
         return;
       }
-
-      invoke("engine", {command: {Move: {position: target}}}).then()
+      invoke("engine", { command: { Move: { position: target } } }).then();
     },
-    [position, isMoving, map]
+    [position, isMoving, map, terrain]
   );
 
   useEffect(() => {
-    const unlistenPromise = listen('move_path', (event) => {
-      console.log(event)
-      let path = event?.payload
-
+    const unlisten = listen('move_path', (event) => {
+      const path = event?.payload;
       if (!path || path.length < 2) {
         if (!path) setFeedback('Aucun chemin possible vers cette case.');
         return;
       }
-
       setFeedback(null);
       setIsMoving(true);
-
       let step = 1;
       const interval = setInterval(() => {
         setPosition(path[step]);
@@ -66,10 +58,11 @@ export const PlayerProvider = ({ children }) => {
           setIsMoving(false);
         }
       }, STEP_DURATION_MS);
-    })
-
-    return () => unlistenPromise.then((fn) => fn())
+    });
+    return () => { unlisten.then((fn) => fn()); };
   }, []);
+
+  if (!map) return null;
 
   const value = {
     position,

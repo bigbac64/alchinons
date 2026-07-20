@@ -34,6 +34,7 @@ pub fn run() {
                    let events = engine.drain_events();
 
                    drop(engine);
+                   println!("events: {:?}", events);
 
                    for ev in events {
                        app_handle.emit(ev.name(), ev.payload()).ok();
