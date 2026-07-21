@@ -10,12 +10,14 @@ use crate::states::GameState;
 use crate::systems::gather::GatherSystem;
 use crate::systems::moving::MoveSystem;
 use crate::systems::transfert::{TransferInventorySystem};
+use crate::systems::craft::CraftSystem;
 
 pub struct GameEngine {
     states: GameState,
     gather_system: GatherSystem,
     move_system: MoveSystem,
     transfer_system: TransferInventorySystem,
+    craft_system: CraftSystem,
     events: Vec<Event>,
     notify: Arc<Notify>, // Arc = partage l'objet avec un autrer
 }
@@ -28,6 +30,7 @@ impl GameEngine {
             gather_system: GatherSystem::new(),
             move_system: MoveSystem::new(),
             transfer_system: TransferInventorySystem::new(),
+            craft_system: CraftSystem::new(),
             events: Vec::new(),
             notify,
         }
@@ -58,6 +61,9 @@ impl GameEngine {
                 SystemOutcome
                 ::events(self.transfer_system
                     .execute(payload.source, payload.destination, payload.items, &mut self.states))
+            },
+            Command::Craft { payload } => {
+                SystemOutcome::events(self.craft_system.execute(payload.recipe, payload.inventory, &mut self.states))
             },
             Command::GetInventory {name} => {
                 SystemOutcome::output(CommandOutput::Inventory(

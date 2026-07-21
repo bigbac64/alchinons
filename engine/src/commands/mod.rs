@@ -1,8 +1,10 @@
 pub mod inventory;
 pub mod outcome;
+pub mod craft;
 
 use serde::Deserialize;
 use crate::commands::inventory::TransferInventoryPayload;
+use crate::commands::craft::CraftPayload;
 use crate::definitions::position::Position;
 
 /// Marqueur : nom du point d'entrée Tauri unique (`invoke(NAME, {command})`).
@@ -22,6 +24,9 @@ pub enum Command {
     },
     TransferInventory {
         payload: TransferInventoryPayload,
+    },
+    Craft {
+        payload: CraftPayload,
     },
 
     /// Getter

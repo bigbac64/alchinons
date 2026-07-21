@@ -33,6 +33,12 @@ impl Inventory {
         }
     }
 
+    pub fn has_all(&self, required: &HashMap<Resource, u32>) -> bool {
+        required.iter().all(|(resource, quantity)| {
+            self.content.get(resource).copied().unwrap_or(0) >= *quantity
+        })
+    }
+
     pub fn excludes(&mut self, other: HashMap<Resource, u32>) -> Option<HashMap<Resource, u32>> {
         let mut had_overflow = false;
         let mut actually_excluded: HashMap<Resource, u32> = HashMap::new();

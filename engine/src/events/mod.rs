@@ -11,6 +11,7 @@ pub enum Event {
     InventoryUpdated { changes: InventoryView },
     MovePath {path: Vec<Position>},
     MoveFailed,
+    CraftFailed { recipe: String },
 }
 
 /// Marqueur : un type d'event diffusable au frontend via un canal Tauri unique.
@@ -27,6 +28,7 @@ impl Event {
             Event::InventoryUpdated {changes: _} => "inventory_update",
             Event::MovePath {path: _} => "move_path",
             Event::MoveFailed => "move_failed",
+            Event::CraftFailed {recipe: _} => "craft_failed",
         }
     }
 
@@ -35,6 +37,7 @@ impl Event {
             Event::InventoryUpdated {changes} => { json!(changes) },
             Event::MovePath {path} => json!(path),
             Event::MoveFailed => json!({"error": "Pathfinding failed"}),
+            Event::CraftFailed {recipe} => json!({"recipe": recipe, "error": "Ressources insuffisantes"}),
         }
     }
 }
