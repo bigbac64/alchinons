@@ -9,3 +9,16 @@ pub fn engine(state: State<AppState>, command: Command) -> Result<CommandOutput,
 
     Ok(engine.execute(command))
 }
+
+#[cfg(test)]
+mod tests {
+    use engine::commands::EngineCommand;
+    use super::*;
+
+    #[test]
+    fn command_name_matches_contract() {
+        // Garde-fou : si la fonction `engine` est renommée, ce test rappelle
+        // de mettre à jour Command::NAME (et donc ENGINE_COMMAND côté JS).
+        assert_eq!(stringify!(engine), Command::NAME);
+    }
+}

@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
-import { invoke } from "@tauri-apps/api/core";
+import {getInventory, listenEngineEvents} from "../utils/api.js";
 
 const InventoryContext = createContext(null);
 
@@ -9,22 +9,25 @@ export function InventoryProvider({ children }) {
   const [warehouse, setWarehouse] = useState(null);
 
   useEffect(() => {
-    invoke("engine", { command: { GetInventory: { name: "player" } } })
-      .then(({ data }) => setPlayer(data));
-    invoke("engine", { command: { GetInventory: { name: "warehouse" } } })
-      .then(({ data }) => setWarehouse(data));
+    getInventory("player").then(({ data }) => setPlayer(data));
+    getInventory("warehouse").then(({ data }) => setWarehouse(data));
   }, []);
 
   useEffect(() => {
-    const unlisten = listen("inventory_update", (event) => {
-      const payload = { items: event.payload.items };
-      switch (event.payload.name) {
-        case "player":    setPlayer(payload);    break;
-        case "warehouse": setWarehouse(payload); break;
-      }
+    const unlisten = listenEngineEvents({
+      InventoryUpdated: ({changes}) => {
+        console.log("Inventory updated: ", changes);
+        if (changes.name === "player") setPlayer(changes);
+        if (changes.name === "warehouse") setWarehouse(changes);
+      },
     });
     return () => { unlisten.then((fn) => fn()); };
   }, []);
+
+  useEffect(() => {
+    console.log("Player inventory: ", player);
+    console.log("Warehouse inventory: ", warehouse);
+  }, [player, warehouse]);
 
   return (
     <InventoryContext.Provider value={{ player, warehouse }}>

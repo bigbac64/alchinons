@@ -1,19 +1,9 @@
-import { invoke } from "@tauri-apps/api/core";
-import { MapProvider } from "../providers/map/MapProvider.jsx";
-import { PlayerProvider, usePlayer } from "../providers/map/PlayerProvider.jsx";
+import { usePlayer } from "../providers/map/PlayerProvider.jsx";
 import HexGrid from "../components/map/HexGrid.jsx";
 import MapLegend from "../components/map/MapLegend.jsx";
 
-function MapContent() {
-
-}
-
 function Carte() {
   const { currentTile, feedback } = usePlayer();
-
-  async function gather() {
-    await invoke("engine", { command: "Gather" });
-  }
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-8">

@@ -2,6 +2,7 @@ mod commands;
 mod states;
 
 use tauri::{Emitter, Manager};
+use engine::events::{EngineBroadcast, Event};
 use crate::commands::engine;
 use crate::states::AppState;
 
@@ -30,14 +31,11 @@ pub fn run() {
 
                    let state = app_handle.state::<AppState>();
                    let mut engine = state.engine.lock().unwrap();
-
                    let events = engine.drain_events();
-
                    drop(engine);
-                   println!("events: {:?}", events);
 
-                   for ev in events {
-                       app_handle.emit(ev.name(), ev.payload()).ok();
+                   if !events.is_empty() {
+                       app_handle.emit(Event::CHANNEL, events).ok();
                    }
                };
             });

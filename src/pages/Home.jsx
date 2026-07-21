@@ -1,14 +1,16 @@
-import { invoke } from "@tauri-apps/api/core";
-import { useInventory } from "../hooks/useInventory";
 import Button from "../components/Button/Button.jsx";
 import Inventory from "../components/inventory/Inventory.jsx";
+import {useInventory} from "../providers/InventoryProvider.jsx";
+import {gather} from "../utils/api.js";
+import {useEffect} from "react";
 
 function Home() {
   const {player, warehouse} = useInventory();
 
-  async function gather() {
-    await invoke("engine", { command: "Gather" });
-  }
+  useEffect(() => {
+    console.log("Player inventory: ", player);
+    console.log("Warehouse inventory: ", warehouse);
+  }, [player, warehouse]);
 
   return (
     <div className="mx-auto max-w-2xl px-6 py-10">

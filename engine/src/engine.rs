@@ -2,7 +2,7 @@ use std::mem::take;
 use std::sync::Arc;
 use tokio::sync::Notify;
 pub use crate::commands::Command;
-use crate::commands::CommandOutput;
+use crate::commands::{CommandOutput, SystemOutcome};
 use crate::definitions::inventory::Inventory;
 use crate::definitions::terrain::Terrain;
 use crate::events::Event;
@@ -38,37 +38,34 @@ impl GameEngine {
     }
 
     pub fn execute(&mut self, command: Command) -> CommandOutput{
-        let mut events = vec![];
-
-        let output: CommandOutput = match command {
+        let SystemOutcome { output, events } = match command {
             Command::Gather => {
-                events = self.gather_system.execute(&mut self.states);
-                CommandOutput::None
+                SystemOutcome::events(self.gather_system.execute(&mut self.states))
             },
             Command::GetMap => {
-                CommandOutput::Map(self.states.map.to_view())
+                SystemOutcome::output(CommandOutput::Map(self.states.map.to_view()))
             },
             Command::GetTerrain => {
-                CommandOutput::Terrain(Terrain::view())
+                SystemOutcome::output(CommandOutput::Terrain(Terrain::view()))
             },
             Command::GetPlayer => {
-                CommandOutput::Player(self.states.player.player.position)
+                SystemOutcome::output(CommandOutput::Player(self.states.player.player.position))
             },
             Command::Move {position} => {
-                events = self.move_system.execute(position, &mut self.states);
-                CommandOutput::None
+                SystemOutcome::events(self.move_system.execute(position, &mut self.states))
             },
-            Command::TransferInventory {source, destination} => {
-                events =self.transfer_system.execute(source, destination, &mut self.states);
-                CommandOutput::None
+            Command::TransferInventory { payload } => {
+                SystemOutcome
+                ::events(self.transfer_system
+                    .execute(payload.source, payload.destination, payload.items, &mut self.states))
             },
             Command::GetInventory {name} => {
-                CommandOutput::Inventory(
+                SystemOutcome::output(CommandOutput::Inventory(
                     self.states.inventory.get_by_name(
                         name.as_str()
                     ).unwrap_or(&Inventory::new(name))
                         .to_view()
-                )
+                ))
             },
         };
 

@@ -3,7 +3,7 @@ import Vector from '../../utils/vector.js';
 import Matrix from '../../utils/matrix.js';
 import Hexagon from '../../utils/hexagone.js';
 import { HEX_SIZE, HEX_GAP } from '../../config/mapConfig.js';
-import {invoke} from "@tauri-apps/api/core";
+import {getMap, getTerrain} from "../../utils/api.js";
 
 const MapContext = createContext(null);
 
@@ -28,9 +28,9 @@ export const MapProvider = ({ children }) => {
 
   useEffect(() => {
     (async () => {
-      const { data: { terrain } } = await invoke('engine', { command: "GetTerrain" });
+      const { terrain } = await getTerrain();
       setTerrain(terrain);
-      const { data: { map } } = await invoke('engine', { command: "GetMap" });
+      const { map } = await getMap();
       if (!map) return;
       const matrix = new Matrix();
       matrix.make(new Vector(map[0].length, map.length), (at) => {

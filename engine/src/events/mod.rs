@@ -5,11 +5,20 @@ use crate::views::inventory::InventoryView;
 
 pub mod inventory;
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Clone, Debug)]
+#[serde(tag = "type", content = "data")]
 pub enum Event {
     InventoryUpdated { changes: InventoryView },
     MovePath {path: Vec<Position>},
     MoveFailed,
+}
+
+/// Marqueur : un type d'event diffusable au frontend via un canal Tauri unique.
+/// Centralise le nom du canal pour ne jamais le retaper en dur (ni dans lib.rs,
+/// ni côté front) — pur marqueur de données, aucune logique, conforme à
+/// "Events are pure data".
+pub trait EngineBroadcast: Serialize {
+    const CHANNEL: &'static str;
 }
 
 impl Event {
@@ -30,3 +39,6 @@ impl Event {
     }
 }
 
+impl EngineBroadcast for Event {
+    const CHANNEL: &'static str = "engine://event";
+}

@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import Vector from '../../utils/vector.js';
 import { useMap } from './MapProvider.jsx';
-import {invoke} from "@tauri-apps/api/core";
 import {listen} from "@tauri-apps/api/event";
+import {getPlayer, listenEngineEvents, move} from "../../utils/api.js";
 
 const PlayerContext = createContext(null);
 const STEP_DURATION_MS = 220;
@@ -21,8 +21,9 @@ export const PlayerProvider = ({ children }) => {
   const [feedback, setFeedback] = useState(null);
 
   useEffect(() => {
-    invoke('engine', { command: "GetPlayer" })
-      .then(({ data }) => setPosition(new Vector(data.x, data.y)));
+    getPlayer().then(({x, y}) => {
+      setPosition(new Vector(x, y))
+    });
   }, []);
 
   useEffect(() => {
@@ -39,33 +40,30 @@ export const PlayerProvider = ({ children }) => {
         setFeedback("Cette case n'est pas praticable.");
         return;
       }
-      invoke("engine", { command: { Move: { position: target } } }).then();
+      move(target).then();
     },
     [position, isMoving, map, terrain]
   );
 
   useEffect(() => {
-    const unlisten = listen('move_failed', () => {
-      setFeedback('Aucun chemin possible vers cette case.');
-    });
-    return () => { unlisten.then((fn) => fn()); };
-  }, []);
 
-  useEffect(() => {
-    const unlisten = listen('move_path', (event) => {
-      const path = event?.payload;
-
-      setFeedback(null);
-      setIsMoving(true);
-      let step = 1;
-      const interval = setInterval(() => {
-        setPosition(path[step]);
-        step += 1;
-        if (step >= path.length) {
-          clearInterval(interval);
-          setIsMoving(false);
-        }
-      }, STEP_DURATION_MS);
+    const unlisten = listenEngineEvents({
+      MovePath: (event) => {
+        const path = event?.path;
+        console.log("Moving to path: ", event);
+        setFeedback(null);
+        setIsMoving(true);
+        let step = 1;
+        const interval = setInterval(() => {
+          setPosition(path[step]);
+          step += 1;
+          if (step >= path.length) {
+            clearInterval(interval);
+            setIsMoving(false);
+          }
+        }, STEP_DURATION_MS);
+      },
+      MoveFailed: () => setFeedback('Aucun chemin possible vers cette case.'),
     });
     return () => { unlisten.then((fn) => fn()); };
   }, []);

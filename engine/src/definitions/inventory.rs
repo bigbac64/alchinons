@@ -33,11 +33,11 @@ impl Inventory {
         }
     }
 
-    pub fn excludes(&mut self, other: Inventory) -> Option<HashMap<Resource, u32>> {
+    pub fn excludes(&mut self, other: HashMap<Resource, u32>) -> Option<HashMap<Resource, u32>> {
         let mut had_overflow = false;
         let mut actually_excluded: HashMap<Resource, u32> = HashMap::new();
 
-        for (key, value) in other.content {
+        for (key, value) in other {
             let entry = self.content.entry(key.clone()).or_insert(0);
             let current = *entry;
             match current.checked_sub(value) {
