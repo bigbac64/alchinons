@@ -36,8 +36,8 @@ function Home() {
         </Button>
       </div>
 
-      <Inventory inventory={player?.items} name={"Joueur"}></Inventory>
-      <Inventory inventory={warehouse?.items} name={"Entrepot"}></Inventory>
+      <Inventory inventory={player} name={"Joueur"}></Inventory>
+      <Inventory inventory={warehouse} name={"Entrepot"}></Inventory>
 
     </div>
   );

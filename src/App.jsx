@@ -6,19 +6,22 @@ import Carte from "./pages/Carte.jsx";
 import Exploitation from "./pages/Exploitation.jsx";
 import {MapProvider} from "./providers/map/MapProvider.jsx";
 import {PlayerProvider} from "./providers/map/PlayerProvider.jsx";
+import {InventoryProvider} from "./providers/InventoryProvider.jsx";
 
 function App() {
   return (
     <MapProvider>
       <PlayerProvider>
-        <Routes>
-          <Route element={<Layout />}>
-            <Route path="/" element={<Home />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/carte" element={<Carte />} />
-            <Route path="/exploit" element={<Exploitation />} />
-          </Route>
-        </Routes>
+        <InventoryProvider>
+          <Routes>
+            <Route element={<Layout />}>
+              <Route path="/" element={<Home />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/carte" element={<Carte />} />
+              <Route path="/exploit" element={<Exploitation />} />
+            </Route>
+          </Routes>
+        </InventoryProvider>
       </PlayerProvider>
     </MapProvider>
   );
