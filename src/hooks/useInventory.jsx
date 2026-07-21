@@ -9,14 +9,11 @@ export function useInventory() {
   useEffect(() => {
     if (player === undefined) {
       invoke("engine", {command: {GetInventory: {name: "player"}}})
-        .then(({data: {inventory}}) => {
-
-          console.log(inventory)
-          setPlayer(inventory)
-        })
-    } else if (warehouse === undefined) {
+        .then(({data: {items}}) => setPlayer(items))
+    }
+    if (warehouse === undefined) {
       invoke("engine", {command: {GetInventory: {name: "warehouse"}}})
-        .then(({data: {inventory}}) => setWarehouse(inventory))
+        .then(({data: {items}}) => setWarehouse(items))
     }
 
   }, []);

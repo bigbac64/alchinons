@@ -13,7 +13,7 @@ impl Looting{
 
         for loot in definition.loot{
             let gain = loot.infallible + (loot.infallible..loot.bonus_max)
-                .filter(|_| { loot.chance < random()})
+                .filter(|_| { loot.chance > random()})
                 .count() as u32;
 
             *qt_resources

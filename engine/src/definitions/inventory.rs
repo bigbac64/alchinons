@@ -1,3 +1,4 @@
+use std::cmp;
 use std::collections::HashMap;
 use crate::definitions::resources::Resource;
 use crate::views::inventory::{InventoryView, ItemView};
@@ -32,10 +33,27 @@ impl Inventory {
         }
     }
 
-    pub fn excludes(&mut self, other: Inventory) {
+    pub fn excludes(&mut self, other: Inventory) -> Option<HashMap<Resource, u32>> {
+        let mut had_overflow = false;
+        let mut actually_excluded: HashMap<Resource, u32> = HashMap::new();
+
         for (key, value) in other.content {
-            self.content.entry(key).and_modify(|v| *v = v.checked_sub(value).unwrap_or(0)).or_insert(0);
+            let entry = self.content.entry(key.clone()).or_insert(0);
+            let current = *entry;
+            match current.checked_sub(value) {
+                Some(new_val) => {
+                    *entry = new_val;
+                    actually_excluded.insert(key, value);
+                }
+                None => {
+                    had_overflow = true;
+                    *entry = 0;
+                    actually_excluded.insert(key, current);
+                }
+            }
         }
+
+        if had_overflow { Some(actually_excluded) } else { None }
     }
 
     pub fn from_view(_view: InventoryView) -> Self {

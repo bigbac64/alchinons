@@ -2,22 +2,10 @@ import React, {createContext, useCallback, useContext, useEffect, useMemo, useSt
 import Vector from '../../utils/vector.js';
 import Matrix from '../../utils/matrix.js';
 import Hexagon from '../../utils/hexagone.js';
-import { HEX_SIZE, HEX_GAP, TERRAIN } from '../../config/mapConfig.js';
+import { HEX_SIZE, HEX_GAP } from '../../config/mapConfig.js';
 import {invoke} from "@tauri-apps/api/core";
 
 const MapContext = createContext(null);
-
-const buildMap = async () => {
-  const matrix = new Matrix();
-  let {data: {map}} = await invoke('engine', { command: "GetMap" })
-  if (!map) return
-
-  console.log(map)
-  matrix.make(new Vector(map[0].length, map.length), (at) => ({
-    ...TERRAIN[map[at.y][at.x]],
-  }));
-  return matrix;
-};
 
 /**
  * MapProvider - construit la grille de terrain et expose les utilitaires de
@@ -39,12 +27,18 @@ export const MapProvider = ({ children }) => {
   const getTile = useCallback((at) => map?.get(at), [map]);
 
   useEffect(() => {
-    buildMap().then(setMap)
-  }, []);
-
-  useEffect(() => {
-    invoke('engine', { command: "GetTerrain" })
-      .then(({data: {terrain}}) => setTerrain(terrain))
+    (async () => {
+      const { data: { terrain } } = await invoke('engine', { command: "GetTerrain" });
+      setTerrain(terrain);
+      const { data: { map } } = await invoke('engine', { command: "GetMap" });
+      if (!map) return;
+      const matrix = new Matrix();
+      matrix.make(new Vector(map[0].length, map.length), (at) => {
+        const id = map[at.y][at.x];
+        return { id, ...terrain[id] };
+      });
+      setMap(matrix);
+    })();
   }, []);
 
   const value = useMemo(

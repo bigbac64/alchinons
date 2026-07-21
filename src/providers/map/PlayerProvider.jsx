@@ -1,6 +1,5 @@
-import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import Vector from '../../utils/vector.js';
-import { START_POSITION } from '../../config/mapConfig.js';
 import { useMap } from './MapProvider.jsx';
 import {invoke} from "@tauri-apps/api/core";
 import {listen} from "@tauri-apps/api/event";
@@ -17,9 +16,14 @@ const FEEDBACK_DURATION_MS = 2500;
 export const PlayerProvider = ({ children }) => {
   const { map, terrain } = useMap();
 
-  const [position, setPosition] = useState(new Vector(START_POSITION.x, START_POSITION.y));
+  const [position, setPosition] = useState(null);
   const [isMoving, setIsMoving] = useState(false);
   const [feedback, setFeedback] = useState(null);
+
+  useEffect(() => {
+    invoke('engine', { command: "GetPlayer" })
+      .then(({ data }) => setPosition(new Vector(data.x, data.y)));
+  }, []);
 
   useEffect(() => {
     if (!feedback) return undefined;
@@ -41,12 +45,16 @@ export const PlayerProvider = ({ children }) => {
   );
 
   useEffect(() => {
+    const unlisten = listen('move_failed', () => {
+      setFeedback('Aucun chemin possible vers cette case.');
+    });
+    return () => { unlisten.then((fn) => fn()); };
+  }, []);
+
+  useEffect(() => {
     const unlisten = listen('move_path', (event) => {
       const path = event?.payload;
-      if (!path || path.length < 2) {
-        if (!path) setFeedback('Aucun chemin possible vers cette case.');
-        return;
-      }
+
       setFeedback(null);
       setIsMoving(true);
       let step = 1;
@@ -62,7 +70,7 @@ export const PlayerProvider = ({ children }) => {
     return () => { unlisten.then((fn) => fn()); };
   }, []);
 
-  if (!map) return null;
+  if (!map || !position) return null;
 
   const value = {
     position,

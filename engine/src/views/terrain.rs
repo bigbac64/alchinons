@@ -10,4 +10,6 @@ pub struct TerrainView {
 pub struct TerrainDefinitionView {
     pub(crate) walkable: bool,
     pub(crate) cost: u32,
+    pub(crate) label: String,
+    pub(crate) color: String,
 }

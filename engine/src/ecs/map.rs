@@ -37,8 +37,12 @@ impl Map {
             .collect()
     }
 
-    pub fn get_terrain(&self, position: Position) -> Terrain {
-        self.map[position.y as usize][position.x as usize]
+    pub fn get_terrain(&self, position: Position) -> Option<Terrain> {
+        if self.map.capacity() < position.y as usize
+            || self.map[position.y as usize].capacity() < position.x as usize {
+            return None;
+        }
+        Some(self.map[position.y as usize][position.x as usize])
     }
 
     pub fn to_view(&self) -> MapView {

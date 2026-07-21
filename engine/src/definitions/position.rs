@@ -8,6 +8,9 @@ pub struct Position {
 
 impl Position {
     pub fn sub(&self, other: Position) -> Position {
-        Position {x: self.x - other.x, y: self.y - other.y}
+        Position {
+            x: self.x.checked_sub(other.x).unwrap_or(0),
+            y: self.y.checked_sub(other.y).unwrap_or(0),
+        }
     }
 }

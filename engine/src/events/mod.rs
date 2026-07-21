@@ -9,6 +9,7 @@ pub mod inventory;
 pub enum Event {
     InventoryUpdated { changes: InventoryView },
     MovePath {path: Vec<Position>},
+    MoveFailed,
 }
 
 impl Event {
@@ -16,6 +17,7 @@ impl Event {
         match self {
             Event::InventoryUpdated {changes: _} => "inventory_update",
             Event::MovePath {path: _} => "move_path",
+            Event::MoveFailed => "move_failed",
         }
     }
 
@@ -23,6 +25,7 @@ impl Event {
         match self {
             Event::InventoryUpdated {changes} => { json!(changes) },
             Event::MovePath {path} => json!(path),
+            Event::MoveFailed => json!({"error": "Pathfinding failed"}),
         }
     }
 }

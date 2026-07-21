@@ -19,7 +19,7 @@ impl MoveSystem {
                 states.player.player.position = *path.last().unwrap();
                 vec![Event::MovePath { path }]
             }
-            None => { vec![] }
+            None => { vec![Event::MoveFailed] }
         }
     }
 }

@@ -10,7 +10,6 @@ use crate::states::GameState;
 use crate::systems::gather::GatherSystem;
 use crate::systems::moving::MoveSystem;
 use crate::systems::transfert::{TransferInventorySystem};
-use crate::views::inventory::InventoryView;
 
 pub struct GameEngine {
     states: GameState,
@@ -51,6 +50,9 @@ impl GameEngine {
             },
             Command::GetTerrain => {
                 CommandOutput::Terrain(Terrain::view())
+            },
+            Command::GetPlayer => {
+                CommandOutput::Player(self.states.player.player.position)
             },
             Command::Move {position} => {
                 events = self.move_system.execute(position, &mut self.states);

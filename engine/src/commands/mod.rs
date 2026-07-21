@@ -18,17 +18,19 @@ pub enum Command {
     /// Getter
     GetMap,
     GetTerrain,
+    GetPlayer,
     GetInventory {
         name: String,
     },
 }
 
 
-#[derive(Serialize)] 
+#[derive(Serialize)]
 #[serde(tag = "type", content = "data")]
 pub enum CommandOutput {
     Map(MapView),
     Inventory(InventoryView),
     Terrain(TerrainView),
+    Player(Position),
     None,
 }
