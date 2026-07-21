@@ -1,5 +1,5 @@
 use tauri::State;
-use engine::commands::CommandOutput;
+use engine::commands::outcome::CommandOutput;
 use engine::engine::{Command};
 use crate::states::AppState;
 

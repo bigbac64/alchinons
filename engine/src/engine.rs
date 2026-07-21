@@ -2,7 +2,7 @@ use std::mem::take;
 use std::sync::Arc;
 use tokio::sync::Notify;
 pub use crate::commands::Command;
-use crate::commands::{CommandOutput, SystemOutcome};
+use crate::commands::outcome::{CommandOutput, SystemOutcome};
 use crate::definitions::inventory::Inventory;
 use crate::definitions::terrain::Terrain;
 use crate::events::Event;
