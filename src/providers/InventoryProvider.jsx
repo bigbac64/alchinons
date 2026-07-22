@@ -8,8 +8,8 @@ export function InventoryProvider({ children }) {
   const [warehouse, setWarehouse] = useState(null);
 
   useEffect(() => {
-    getInventory("player").then(({ data }) => setPlayer(data));
-    getInventory("warehouse").then(({ data }) => setWarehouse(data));
+    getInventory("player").then(setPlayer);
+    getInventory("warehouse").then(setWarehouse);
   }, []);
 
   useEffect(() => {

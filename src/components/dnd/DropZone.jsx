@@ -1,16 +1,18 @@
-import {useDroppable} from "@dnd-kit/core";
+import { forwardRef } from "react";
+import { useDroppable } from "@dnd-kit/core";
 
-const DropZone = ({className, id, ...other}) => {
-  const {
-    isOver,
-    setNodeRef,
-  } = useDroppable({
-    id,
-  });
+const DropZone = forwardRef(({ className, id, children, ...other }, ref) => {
+  const { isOver, setNodeRef } = useDroppable({ id });
+
+  function setRefs(node) {
+    setNodeRef(node);
+    if (typeof ref === "function") ref(node);
+    else if (ref) ref.current = node;
+  }
 
   return (
     <div
-      ref={setNodeRef}
+      ref={setRefs}
       className={`
                 absolute
                 rounded-lg
@@ -19,8 +21,12 @@ const DropZone = ({className, id, ...other}) => {
                 ${className}
             `}
       {...other}
-    ></div>
+    >
+      {children}
+    </div>
   );
-}
+});
+
+DropZone.displayName = "DropZone";
 
 export default DropZone;
