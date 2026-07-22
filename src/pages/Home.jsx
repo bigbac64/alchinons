@@ -3,6 +3,7 @@ import Inventory from "../components/inventory/Inventory.jsx";
 import {useInventory} from "../providers/InventoryProvider.jsx";
 import {gather} from "../utils/api.js";
 import {useEffect} from "react";
+import TableScroll from "../components/dnd/Table.jsx";
 
 function Home() {
   const {player, warehouse} = useInventory();
@@ -37,6 +38,8 @@ function Home() {
           Récolter
         </Button>
       </div>
+
+      <TableScroll/>
 
       <Inventory inventory={player} name={"Joueur"}></Inventory>
       <Inventory inventory={warehouse} name={"Entrepot"}></Inventory>
