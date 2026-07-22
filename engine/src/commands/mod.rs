@@ -32,6 +32,7 @@ pub enum Command {
     /// Getter
     GetMap,
     GetTerrain,
+    GetRecipes,
     GetPlayer,
     GetInventory {
         name: String,

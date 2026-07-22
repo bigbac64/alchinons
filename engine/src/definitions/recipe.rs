@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use crate::definitions::resources::Resource;
+use crate::views::recipe::{RecipeAmountView, RecipeDefinitionView, RecipeView};
 
 /// `duration` est en ticks (0 = résolu immédiatement par CraftSystem::execute,
 /// > 0 = mis en attente dans CraftState et résolu plus tard par CraftSystem::tick).
@@ -27,6 +28,27 @@ const CHARCOAL: RecipeDefinition = RecipeDefinition {
     label: "Charbon de bois",
 };
 
+impl RecipeDefinition {
+    fn to_view(&self, id: Recipe) -> RecipeDefinitionView {
+        let to_amounts = |amounts: &[(Resource, u32)]| {
+            amounts.iter().map(|(resource, quantity)| RecipeAmountView {
+                resource: *resource,
+                quantity: *quantity,
+            }).collect()
+        };
+
+        RecipeDefinitionView {
+            id,
+            label: self.label.to_string(),
+            inputs: to_amounts(self.inputs),
+            outputs: to_amounts(self.outputs),
+            duration: self.duration,
+        }
+    }
+}
+
+const ALL: &[Recipe] = &[Recipe::Plank, Recipe::Charcoal];
+
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub enum Recipe {
     Plank,
@@ -38,6 +60,12 @@ impl Recipe {
         match self {
             Recipe::Plank => &PLANK,
             Recipe::Charcoal => &CHARCOAL,
+        }
+    }
+
+    pub fn view() -> RecipeView {
+        RecipeView {
+            recipes: ALL.iter().map(|recipe| recipe.definition().to_view(*recipe)).collect(),
         }
     }
 }

@@ -17,6 +17,7 @@ function Layout() {
         >Campement</Link>
         <Link to="/settings" className="font-medium text-slate-300 hover:text-emerald-400 transition-colors">Paramètres</Link>
         <Link to="/carte" className="font-medium text-slate-300 hover:text-emerald-400 transition-colors">Carte</Link>
+        <Link to="/craft" className="font-medium text-slate-300 hover:text-emerald-400 transition-colors">Craft</Link>
         <Link to="/exploit"
               className={`font-medium ${isCamp ? "text-slate-500" : "text-slate-300"} hover:text-emerald-400 transition-colors`}
               style={{

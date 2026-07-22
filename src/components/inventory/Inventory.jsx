@@ -1,7 +1,8 @@
 import React from 'react';
+import Slot from "../dnd/Slot.jsx";
 
 const Inventory = (props) => {
-  const {className, inventory, name="Inventaire", ...other} = props;
+  const {className, inventory, name="Inventaire", draggable=false, sourceInventory, ...other} = props;
 
   return (
     <div className={`overflow-hidden rounded-xl border border-slate-700 bg-[#161d2e] ${className}`} {...other}>
@@ -10,16 +11,15 @@ const Inventory = (props) => {
       </div>
          {inventory?.items?.length ? (
            <ul className="divide-y divide-slate-700/60">
-             {inventory.items.map(({ name, quantity }) => (
-               <li
-                 key={name}
-                 className="flex items-center justify-between px-4 py-2.5 transition-colors hover:bg-slate-700/20"
-               >
-                 <span className="text-slate-200">{name}</span>
-                 <span className="rounded-md bg-slate-700 px-2.5 py-0.5 font-mono text-sm text-emerald-300">
-                      {quantity}
-                    </span>
-               </li>
+             {inventory.items.map((item) => (
+               <Slot
+                 key={item.name}
+                 id={`inventory:${sourceInventory ?? inventory.name ?? name}:${item.name}`}
+                 resource={item}
+                 layout="row"
+                 draggable={draggable}
+                 dragData={{ resource: item.name, sourceInventory }}
+               />
              ))}
            </ul>
          ) : (

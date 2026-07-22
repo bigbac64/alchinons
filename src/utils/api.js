@@ -49,3 +49,8 @@ export const getInventory = (name) => sendCommand({ GetInventory: { name } });
 
 export const transferInventory = (sourceName, destinationName, items) =>
   sendCommand({ TransferInventory: { source_name: sourceName, destination_name: destinationName, items } });
+
+export const getRecipes = () => sendCommand("GetRecipes");
+
+export const craft = (recipe, inventory) =>
+  sendCommand({ Craft: { payload: { recipe, inventory } } });

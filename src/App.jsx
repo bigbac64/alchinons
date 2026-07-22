@@ -4,6 +4,7 @@ import Home from "./pages/Home";
 import Settings from "./pages/Settings";
 import Carte from "./pages/Carte.jsx";
 import Exploitation from "./pages/Exploitation.jsx";
+import Craft from "./pages/Craft.jsx";
 import {MapProvider} from "./providers/map/MapProvider.jsx";
 import {PlayerProvider} from "./providers/map/PlayerProvider.jsx";
 import {InventoryProvider} from "./providers/InventoryProvider.jsx";
@@ -19,6 +20,7 @@ function App() {
               <Route path="/settings" element={<Settings />} />
               <Route path="/carte" element={<Carte />} />
               <Route path="/exploit" element={<Exploitation />} />
+              <Route path="/craft" element={<Craft />} />
             </Route>
           </Routes>
         </InventoryProvider>

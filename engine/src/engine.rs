@@ -5,6 +5,7 @@ pub use crate::commands::Command;
 use crate::commands::outcome::{CommandOutput, SystemOutcome};
 use crate::definitions::inventory::Inventory;
 use crate::definitions::terrain::Terrain;
+use crate::definitions::recipe::Recipe;
 use crate::events::Event;
 use crate::states::GameState;
 use crate::systems::gather::GatherSystem;
@@ -50,6 +51,9 @@ impl GameEngine {
             },
             Command::GetTerrain => {
                 SystemOutcome::output(CommandOutput::Terrain(Terrain::view()))
+            },
+            Command::GetRecipes => {
+                SystemOutcome::output(CommandOutput::Recipes(Recipe::view()))
             },
             Command::GetPlayer => {
                 SystemOutcome::output(CommandOutput::Player(self.states.player.player.position))
