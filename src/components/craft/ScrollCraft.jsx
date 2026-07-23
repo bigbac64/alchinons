@@ -31,7 +31,7 @@ export default function ScrollCraft({ recipe, inventory, active = false, classNa
 
   return (
     <div
-      className={`rounded-xl border overflow-hidden bg-[#161d2e] ${active ? "border-emerald-400" : "border-slate-700"} ${className}`}
+      className={`w-3xs rounded-xl border overflow-hidden bg-[#161d2e] ${active ? "border-emerald-400 shadow-md" : "border-slate-800 shadow-2xl"} ${className}`}
     >
       <h3 className="text-center text-m font-semibold uppercase tracking-widest text-slate-400 bg-slate-700">
         {recipe.label}
@@ -41,7 +41,7 @@ export default function ScrollCraft({ recipe, inventory, active = false, classNa
         <Slot
           resource={{ name: output.resource, quantity: output.quantity }}
           layout="tile"
-          className="border-emerald-400"
+          className="border-cyan-600!"
         />
 
         <div className="flex gap-2 flex-wrap flex-1 justify-center items-center">

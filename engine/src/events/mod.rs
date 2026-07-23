@@ -34,7 +34,10 @@ impl Event {
 
     pub fn payload(&self) -> Value {
         match self {
-            Event::InventoryUpdated {changes} => { json!(changes) },
+            Event::InventoryUpdated {changes} => {
+                println!("{:?}", changes);
+                json!(changes)
+            },
             Event::MovePath {path} => json!(path),
             Event::MoveFailed => json!({"error": "Pathfinding failed"}),
             Event::CraftFailed {recipe} => json!({"recipe": recipe, "error": "Ressources insuffisantes"}),

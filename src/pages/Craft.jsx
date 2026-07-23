@@ -13,10 +13,10 @@ export default function Craft() {
   }, []);
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-10 h-screen">
+    <div className="mx-auto max-w-5xl px-6 py-10 flex flex-row gap-3">
       <TableScroll recipes={recipes} player={player} className="mb-6" />
 
-      <Inventory inventory={player} name="Joueur" className="w-72 shrink-0 self-start" />
+      <Inventory inventory={player} name="Joueur" className="w-72 shrink-0 self-stretch" />
     </div>
   );
 }

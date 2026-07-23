@@ -57,6 +57,11 @@ impl Inventory {
                     actually_excluded.insert(key, current);
                 }
             }
+
+            // on fais disparaiter
+            if *entry == 0 {
+                self.content.remove(&key);
+            }
         }
 
         if had_overflow { Some(actually_excluded) } else { None }

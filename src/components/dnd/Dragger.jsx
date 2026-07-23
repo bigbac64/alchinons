@@ -3,15 +3,20 @@ import {useDraggable} from "@dnd-kit/core";
 import {CSS} from "@dnd-kit/utilities";
 
 const DragEntity = (props) => {
-  const {entity, className, children, ...other} = props;
+  const {entity, getterRef, className, children, zIndex, ...other} = props;
 
   const {setNodeRef, listeners, attributes, transform} = useDraggable({
     id: entity.id
   });
 
+  function setRefs(node) {
+    setNodeRef(node);
+    getterRef?.(node);
+  }
+
   return (
     <div className={["select-none touch-none", className].join(" ")}
-         ref={setNodeRef}
+         ref={setRefs}
          {...listeners}
          {...attributes}
          style={{
@@ -19,6 +24,7 @@ const DragEntity = (props) => {
            left: entity.position.x,
            top: entity.position.y,
            transform: CSS.Translate.toString(transform),
+           zIndex: zIndex,
          }}
          {...other}>
 

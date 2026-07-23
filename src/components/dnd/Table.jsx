@@ -13,11 +13,16 @@ function layoutItems(recipes) {
   return recipes.map((recipe, index) => ({
     id: recipe.id,
     recipe,
-    position: {
-      x: 16 + (index % COLUMNS) * 190,
-      y: 16 + Math.floor(index / COLUMNS) * 140,
-    },
+    position: defaultPositionItem(recipe, index),
+    inCauldron: false,
   }));
+}
+
+function defaultPositionItem(item, index) {
+  return {
+    x: 16 ,
+    y: 16 + Math.floor(index) * 60,
+  }
 }
 
 const TableScroll = (props) => {
@@ -27,6 +32,8 @@ const TableScroll = (props) => {
   const [crafting, setCrafting] = useState(false);
   const [craftError, setCraftError] = useState(null);
   const canvasRef = useRef(null);
+  const [topId, setTopId] = useState(null);
+  const refs = useRef({});
 
   useEffect(() => {
     setItems(layoutItems(recipes));
@@ -44,21 +51,40 @@ const TableScroll = (props) => {
     return () => { unlisten.then((fn) => fn()); };
   }, []);
 
+  function handleDragStart({ active }) {
+    setTopId(active.id);
+  }
+
   function handleDragEnd({ active, delta, over }) {
     if (over?.id === CAULDRON_ZONE) {
       const canvasRect = canvasRef.current.getBoundingClientRect();
+      console.log(over)
       setItems((items) =>
-        items.map((item) =>
-          item.id === active.id
+        items.map((item, index) => {
+          const node = refs.current[item.id];
+          const width = node?.getBoundingClientRect().width ?? 0;
+          const default_position = defaultPositionItem(item, index)
+
+          return item.id === active.id
             ? {
+              ...item,
+              inCauldron: true,
+              position: {
+                x: over.rect.left - canvasRect.left + (over.rect.width - width) / 2,
+                y: over.rect.top - canvasRect.top + 18,
+              },
+            }
+            : item.inCauldron ?
+              {
                 ...item,
+                inCauldron: false,
                 position: {
-                  x: over.rect.left - canvasRect.left + 6,
-                  y: over.rect.top - canvasRect.top + 12,
+                  x: default_position.x,
+                  y: default_position.y,
                 },
               }
-            : item
-        )
+              : item
+          })
       );
       setActiveId(active.id);
       return;
@@ -69,6 +95,7 @@ const TableScroll = (props) => {
         item.id === active.id
           ? {
               ...item,
+              inCauldron: false,
               position: {
                 x: item.position.x + delta.x,
                 y: item.position.y + delta.y,
@@ -91,20 +118,20 @@ const TableScroll = (props) => {
 
   return (
     <div className={["w-full", className].join(" ")} {...other}>
-      <div className="relative select-none w-full h-[28rem] border-2 border-slate-700 rounded-2xl overflow-hidden">
-        <DndContext onDragEnd={handleDragEnd} collisionDetection={rectIntersection}>
+      <div className="relative select-none w-full h-[70vh] border-2 border-slate-700 rounded-2xl">
+        <DndContext onDragEnd={handleDragEnd} collisionDetection={rectIntersection} onDragStart={handleDragStart}>
           <DropZone ref={canvasRef} id="table" className="w-full h-full top-0 left-0">
             {items.map((item) => (
-              <DragEntity key={item.id} entity={item}>
+              <DragEntity getterRef={(el) => (refs.current[item.id] = el)} key={item.id} entity={item} zIndex={item.id === topId ? 20 : 10}>
                 <ScrollCraft recipe={item.recipe} inventory={player} active={item.id === activeId} />
               </DragEntity>
             ))}
 
             <DropZone
               id={CAULDRON_ZONE}
-              className={`right-1.5 bottom-3 w-1/4 h-1/3 flex items-start justify-center pt-1 ${craftError ? "border-red-500" : ""}`}
+              className={`right-4 w-2xs h-60 bottom-4 flex items-start justify-center ${craftError ? "border-red-500" : ""}`}
             >
-              <span className="text-[10px] uppercase tracking-widest text-slate-500">Chaudron</span>
+              <span className="text-[10px] uppercase tracking-widest text-slate-500">Imprimerie</span>
             </DropZone>
           </DropZone>
         </DndContext>
@@ -119,7 +146,7 @@ const TableScroll = (props) => {
               : "Déposez un scroll dans le chaudron pour lancer un craft."}
         </span>
         <Button variant="dumper" onClick={handleBump} disabled={!activeItem || crafting}>
-          {crafting ? "…" : "Bump"}
+          {crafting ? "…" : "Fabriquer"}
         </Button>
       </div>
     </div>

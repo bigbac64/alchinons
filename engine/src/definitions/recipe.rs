@@ -24,7 +24,7 @@ const PLANK: RecipeDefinition = RecipeDefinition {
 const CHARCOAL: RecipeDefinition = RecipeDefinition {
     inputs: &[(Resource::Wood, 3)],
     outputs: &[(Resource::Charcoal, 1)],
-    duration: 5,
+    duration: 0,
     label: "Charbon de bois",
 };
 

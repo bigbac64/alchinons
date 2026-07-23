@@ -46,8 +46,8 @@ export default function Slot({
       className={`
         flex h-14 w-14 shrink-0 flex-col items-center justify-center gap-0.5
         rounded-lg border-2 select-none
-        ${filled ? "border-emerald-600 bg-emerald-950/40" : "border-dashed border-slate-600 bg-slate-800/40"}
         ${className}
+        ${filled ? "border-emerald-600 bg-emerald-950/40" : "border-dashed border-slate-600 bg-slate-800/40"}
       `}
     >
       {filled ? (

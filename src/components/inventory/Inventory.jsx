@@ -2,7 +2,7 @@ import Slot from "../dnd/Slot.jsx";
 
 const Inventory = ({ className, inventory, name = "Inventaire", ...other }) => {
   return (
-    <div className={`overflow-hidden rounded-xl border border-slate-700 bg-[#161d2e] ${className}`} {...other}>
+    <div className={`rounded-xl border border-slate-700 bg-[#161d2e] ${className}`} {...other}>
       <div className="border-b border-slate-700 px-4 py-3">
         <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-400">{name}</h2>
       </div>
