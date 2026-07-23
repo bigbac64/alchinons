@@ -1,6 +1,8 @@
 import { usePlayer } from "../providers/map/PlayerProvider.jsx";
 import HexGrid from "../components/map/HexGrid.jsx";
 import MapLegend from "../components/map/MapLegend.jsx";
+import Button from "../components/Button/Button.jsx";
+import {Link} from "react-router-dom";
 
 function Carte() {
   const { currentTile, feedback } = usePlayer();
@@ -30,6 +32,15 @@ function Carte() {
           )}
 
           <MapLegend />
+
+          <Link to={currentTile?.id === "camp" ? "/camp" : "/exploit"}
+                className={`font-medium hover:text-emerald-400 transition-colors`}
+          >
+            <Button className={"w-full h-full bg-sky-800 hover:bg-sky-700 shadow-sky-900/40"}>
+              {currentTile?.id === "camp" ? "Campement" : "Exploitation"}
+            </Button>
+          </Link>
+
         </div>
       </div>
     </div>

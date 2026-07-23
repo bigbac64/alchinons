@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { DndContext, rectIntersection } from "@dnd-kit/core";
-import DragEntity from "./Dragger.jsx";
-import DropZone from "./DropZone.jsx";
-import ScrollCraft from "../craft/ScrollCraft.jsx";
+import DragEntity from "../dnd/Dragger.jsx";
+import DropZone from "../dnd/DropZone.jsx";
+import ScrollCraft from "./ScrollCraft.jsx";
 import Button from "../Button/Button.jsx";
 import { craft, listenEngineEvents } from "../../utils/api.js";
 

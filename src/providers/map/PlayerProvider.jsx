@@ -51,6 +51,10 @@ export const PlayerProvider = ({ children }) => {
       MovePath: (event) => {
         const path = event?.path;
         console.log("Moving to path: ", event);
+        if (path.length < 2) {
+          setFeedback('Vous êtes déjà sur cette case.');
+          return;
+        }
         setFeedback(null);
         setIsMoving(true);
         let step = 1;

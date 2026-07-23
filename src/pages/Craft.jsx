@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import Inventory from "../components/inventory/Inventory.jsx";
 import { useInventory } from "../providers/InventoryProvider.jsx";
 import { getRecipes } from "../utils/api.js";
-import TableScroll from "../components/dnd/Table.jsx";
+import TableScroll from "../components/craft/TableScroll.jsx";
 
 export default function Craft() {
   const { player } = useInventory();
