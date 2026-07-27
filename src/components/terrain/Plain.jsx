@@ -1,12 +1,24 @@
 import { AnimatePresence, motion } from "framer-motion";
 import ButtonHold from "../Button/ButtonHold";
 import Inventory from "../inventory/Inventory.jsx";
+import TileCanvas, { TILE_SIZE } from "./TileCanvas.jsx";
+
+const RESOURCE_ICONS = {
+  Grass: "🌿",
+  Wood: "🪵",
+  Stone: "🪨",
+  Plank: "🪵",
+  Charcoal: "⚫",
+  Berry: "🍓",
+};
 
 export default function Plain({
+                                position,
                                 inventory = [],
                                 discoveries = [],
                                 resources = [],
                                 onSearch = () => {},
+                                onDiscoveryDone = () => {},
                                 searchDisabled = false,
                               }) {
   return (
@@ -27,29 +39,45 @@ export default function Plain({
       <div className="grid grid-cols-12 grid-rows-2 gap-6">
 
         {/* Vue du monde */}
-        <div className="col-span-7 row-span-1 relative overflow-hidden rounded-xl border border-slate-700 bg-slate-900">
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-            <AnimatePresence>
-              {discoveries.map(drop => (
+        <div className="col-span-6 h-100 row-span-1 relative overflow-hidden rounded-xl border border-slate-700 bg-slate-900">
+          <div className="absolute inset-0 flex items-center justify-center">
+            {/* même repère (0..400) que les clics envoyés à `onGather`, pour que
+                les popups de découverte puissent s'aligner dessus au pixel près */}
+            <div className="relative" style={{ width: TILE_SIZE, height: TILE_SIZE }}>
+              <TileCanvas position={position} onGather={onSearch} className="rounded-lg" />
 
-                <motion.div
-                  key={drop.uuid}
-                  className="absolute rounded-lg bg-slate-900/80 px-4 py-2 font-semibold backdrop-blur-sm"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                >
-                  {drop.empty
-                    ? "Rien ._."
-                    : `+${drop.amount} ${drop.name}`}
-                </motion.div>
-              ))}
-            </AnimatePresence>
+              <div className="pointer-events-none absolute inset-0">
+                <AnimatePresence>
+                  {discoveries.map(drop => (
+
+                    <motion.div
+                      key={drop.uuid}
+                      className="absolute -translate-x-1/2 -translate-y-1/2 flex items-center gap-2 rounded-lg bg-slate-900/80 px-4 py-2 font-semibold backdrop-blur-sm"
+                      style={{ left: drop.x ?? TILE_SIZE / 2, top: drop.y ?? TILE_SIZE / 2 }}
+                      initial={{ opacity: 0, y: 0, scale: 0.9 }}
+                      animate={{ opacity: [0, 1, 1, 0], y: -60, scale: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 1.6, ease: "easeOut", times: [0, 0.15, 0.7, 1] }}
+                      onAnimationComplete={() => onDiscoveryDone(drop.uuid)}
+                    >
+                      {drop.empty ? (
+                        "Rien ._."
+                      ) : (
+                        <>
+                          <span className="text-xl">{RESOURCE_ICONS[drop.name] ?? "❔"}</span>
+                          <span>+{drop.amount}</span>
+                        </>
+                      )}
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Analyse */}
-        <div className="col-span-5 row-span-1 rounded-xl border border-slate-700 bg-slate-900">
+        <div className="col-span-6 row-span-1 rounded-xl border border-slate-700 bg-slate-900">
           <div className="border-b border-slate-700 px-5 py-4">
             <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-blue-300">
               Analyse de la zone
@@ -89,7 +117,7 @@ export default function Plain({
         </div>
 
         {/* Actions */}
-        <div className="col-span-5 row-span-1 rounded-xl border border-slate-700 bg-slate-900">
+        <div className="col-span-6 row-span-1 rounded-xl border border-slate-700 bg-slate-900">
           <div className="border-b border-slate-700 px-5 py-4">
             <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-blue-300">
               Actions
@@ -100,7 +128,7 @@ export default function Plain({
             <ButtonHold
               holdDuration={800}
               disabled={searchDisabled}
-              onComplete={onSearch}
+              onComplete={() => onSearch({ x: 200, y: 200 })}
             >
               Fouiller
             </ButtonHold>
@@ -108,7 +136,7 @@ export default function Plain({
         </div>
 
         {/* Inventaire */}
-        <Inventory className="col-span-7 row-span-1" inventory={inventory} />
+        <Inventory className="col-span-6 row-span-1" inventory={inventory} />
 
       </div>
     </div>

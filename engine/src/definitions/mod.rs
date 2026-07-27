@@ -4,3 +4,4 @@ pub mod inventory;
 pub mod map;
 pub mod position;
 pub mod recipe;
+pub mod area;

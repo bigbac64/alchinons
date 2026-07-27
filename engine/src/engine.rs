@@ -43,14 +43,21 @@ impl GameEngine {
 
     pub fn execute(&mut self, command: Command) -> CommandOutput{
         let SystemOutcome { output, events } = match command {
-            Command::Gather => {
-                SystemOutcome::events(self.gather_system.execute(&mut self.states))
+            Command::Gather { position } => {
+                SystemOutcome::events(self.gather_system.execute(position, &mut self.states))
             },
             Command::GetMap => {
                 SystemOutcome::output(CommandOutput::Map(self.states.map.to_view()))
             },
             Command::GetTerrain => {
                 SystemOutcome::output(CommandOutput::Terrain(Terrain::view()))
+            },
+            Command::GetTile { position } => {
+                SystemOutcome::output(
+                    self.states.map.get_tile(position)
+                        .map(|tile| CommandOutput::Tile(tile.to_view()))
+                        .unwrap_or(CommandOutput::None)
+                )
             },
             Command::GetRecipes => {
                 SystemOutcome::output(CommandOutput::Recipes(Recipe::view()))

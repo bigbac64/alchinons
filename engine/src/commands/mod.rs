@@ -18,7 +18,11 @@ pub trait EngineCommand {
 
 #[derive(Deserialize)]
 pub enum Command {
-    Gather,
+    /// `position` est le point cliqué dans le repère local de la tile (0..400,
+    /// ancrage haut-gauche) — pas une case de la grille, contrairement à `Move`.
+    Gather {
+        position: Position,
+    },
     Move {
         position: Position
     },
@@ -32,6 +36,9 @@ pub enum Command {
     /// Getter
     GetMap,
     GetTerrain,
+    GetTile {
+        position: Position,
+    },
     GetRecipes,
     GetPlayer,
     GetInventory {

@@ -3,6 +3,7 @@ const RESOURCE_ICONS = {
   Stone: "🪨",
   Plank: "🪵",
   Charcoal: "⚫",
+  Berry: "🍓",
 };
 
 function ResourceIcon({ resource, className = "text-xl" }) {

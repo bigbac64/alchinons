@@ -35,13 +35,15 @@ function sendCommand(command) {
 // --- Wrappers typés, un par variante de Command ---
 // Nouvelle commande Rust -> une ligne ici, jamais un invoke() ailleurs.
 
-export const gather = () => sendCommand("Gather");
+export const gather = (position) => sendCommand({ Gather: { position } });
 
 export const move = (position) => sendCommand({ Move: { position } });
 
 export const getMap = () => sendCommand("GetMap");
 
 export const getTerrain = () => sendCommand("GetTerrain");
+
+export const getTile = (position) => sendCommand({ GetTile: { position } });
 
 export const getPlayer = () => sendCommand("GetPlayer");
 

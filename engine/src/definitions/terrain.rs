@@ -1,12 +1,10 @@
 use std::collections::HashMap;
 use serde::Serialize;
-use crate::definitions::resources::{LootEntry, Resource};
 use crate::views::terrain::{TerrainDefinitionView, TerrainView};
 
 const VOID: TerrainDefinition = TerrainDefinition {
     walkable: false,
     movement_cost: 0,
-    loot: &[],
     label: "Vide",
     color: "#12172a",
 };
@@ -14,12 +12,6 @@ const VOID: TerrainDefinition = TerrainDefinition {
 const PLAIN: TerrainDefinition = TerrainDefinition {
     walkable: true,
     movement_cost: 1,
-    loot: &[LootEntry{
-        resource: Resource::Wood,
-        infallible: 1,
-        bonus_max: 5,
-        chance: 0.3,
-    }],
     label: "Plaine",
     color: "#4f7a34",
 };
@@ -27,12 +19,6 @@ const PLAIN: TerrainDefinition = TerrainDefinition {
 const FOREST: TerrainDefinition = TerrainDefinition {
     walkable: true,
     movement_cost: 2,
-    loot: &[LootEntry{
-        resource: Resource::Wood,
-        infallible: 3,
-        bonus_max: 10,
-        chance: 0.3,
-    }],
     label: "Forêt",
     color: "#2c5c30",
 };
@@ -40,7 +26,6 @@ const FOREST: TerrainDefinition = TerrainDefinition {
 const WATER: TerrainDefinition = TerrainDefinition {
     walkable: false,
     movement_cost: 3,
-    loot: &[],
     label: "Eau",
     color: "#2f4a7a",
 };
@@ -48,12 +33,6 @@ const WATER: TerrainDefinition = TerrainDefinition {
 const CLIFF: TerrainDefinition = TerrainDefinition {
     walkable: true,
     movement_cost: 2,
-    loot: &[LootEntry{
-        resource: Resource::Stone,
-        infallible: 1,
-        bonus_max: 4,
-        chance: 0.5,
-    }],
     label: "Falaise",
     color: "#3a2a1d",
 };
@@ -61,7 +40,6 @@ const CLIFF: TerrainDefinition = TerrainDefinition {
 const CAMP: TerrainDefinition = TerrainDefinition {
     walkable: true,
     movement_cost: 1,
-    loot: &[],
     label: "Campement",
     color: "#8a6a4f",
 };
@@ -107,7 +85,6 @@ impl Terrain {
 pub struct TerrainDefinition {
     pub walkable: bool,
     pub movement_cost: u32,
-    pub loot: &'static [LootEntry],
     pub label: &'static str,
     pub color: &'static str,
 }

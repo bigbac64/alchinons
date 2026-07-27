@@ -1,6 +1,7 @@
 use serde::Serialize;
 use crate::definitions::position::Position;
 use crate::events::Event;
+use crate::views::area::TileView;
 use crate::views::inventory::InventoryView;
 use crate::views::map::MapView;
 use crate::views::terrain::TerrainView;
@@ -14,6 +15,7 @@ pub enum CommandOutput {
     Terrain(TerrainView),
     Recipes(RecipeView),
     Player(Position),
+    Tile(TileView),
     None,
 }
 
