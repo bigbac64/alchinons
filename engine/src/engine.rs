@@ -3,15 +3,15 @@ use std::sync::Arc;
 use tokio::sync::Notify;
 pub use crate::commands::Command;
 use crate::commands::outcome::{CommandOutput, SystemOutcome};
-use crate::definitions::inventory::Inventory;
-use crate::definitions::terrain::Terrain;
-use crate::definitions::recipe::Recipe;
+use crate::inventory::model::Inventory;
+use crate::world::terrain::Terrain;
+use crate::craft::recipe::Recipe;
 use crate::events::Event;
-use crate::states::GameState;
-use crate::systems::gather::GatherSystem;
-use crate::systems::moving::MoveSystem;
-use crate::systems::transfert::{TransferInventorySystem};
-use crate::systems::craft::CraftSystem;
+use crate::state::GameState;
+use crate::gather::system::GatherSystem;
+use crate::movement::system::MoveSystem;
+use crate::inventory::system::TransferInventorySystem;
+use crate::craft::system::CraftSystem;
 
 pub struct GameEngine {
     states: GameState,

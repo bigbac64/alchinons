@@ -1,7 +1,7 @@
 use serde::Serialize;
 use serde_json::{json, Value};
-use crate::definitions::position::Position;
-use crate::views::inventory::InventoryView;
+use crate::position::Position;
+use crate::inventory::view::InventoryView;
 
 pub mod inventory;
 

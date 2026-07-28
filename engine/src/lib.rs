@@ -1,13 +1,17 @@
 
-pub mod definitions;
-pub mod ecs;
-pub mod systems;
-pub mod states;
+pub mod position;
+pub mod resource;
+pub mod state;
 pub mod engine;
 pub mod events;
 pub mod commands;
-pub mod views;
-pub mod services;
+
+pub mod player;
+pub mod craft;
+pub mod inventory;
+pub mod world;
+pub mod movement;
+pub mod gather;
 
 #[cfg(test)]
 mod tests {

@@ -29,6 +29,8 @@ sudo apt install \
 
 ## Architecture development
 
+Voir [`ARCHITECTURE_GUIDELINES.md`](./ARCHITECTURE_GUIDELINES.md) pour la référence complète (principes, règles de développement, documentation). Résumé :
+
 ```
 React
     |
@@ -39,19 +41,19 @@ Tauri
     |
 Engine
     |
-    ├── engine.rs (main de l'execution)
+    ├── engine.rs (composition root : routage des Command)
+    ├── state.rs  (composition de l'état de jeu, un champ par domaine)
     |
-    ├── Definitions (les constante et definition du jeux)
+    ├── position.rs, resource.rs (types transverses partagés par tous les domaines)
+    ├── commands/  (enum Command + CommandOutput : entrée/sortie du moteur)
+    ├── events/    (enum Event : notifications asynchrones vers le frontend)
     |
-    ├── State (L'état du jeux)
-    |
-    ├── ECS (Entity Component System: element composant le jeu) 
-    |
-    ├── Systems (calcule, logi(que/stique), rendu)
-    |
-    ├── Events (les truc a trigger)
-    |
-    ├── Views (le back for front, le maniment des données structurer)
-    |
-    └── Commands (les activable
+    └── un dossier par domaine de jeu, chacun avec ses propres
+        command / model / state / system / view (motif "CMSSV") :
+        ├── player/     (état du joueur)
+        ├── craft/      (recettes, artisanat)
+        ├── inventory/  (inventaires, transferts)
+        ├── world/      (carte, tuiles, terrain)
+        ├── movement/   (déplacement du joueur, pathfinding)
+        └── gather/     (cueillette/récolte, résolution de loot)
 ```

@@ -1,11 +1,9 @@
 use serde::Serialize;
-use crate::definitions::position::Position;
+use crate::position::Position;
 use crate::events::Event;
-use crate::views::area::TileView;
-use crate::views::inventory::InventoryView;
-use crate::views::map::MapView;
-use crate::views::terrain::TerrainView;
-use crate::views::recipe::RecipeView;
+use crate::world::view::{MapView, TerrainView, TileView};
+use crate::inventory::view::InventoryView;
+use crate::craft::view::RecipeView;
 
 #[derive(Serialize)]
 #[serde(tag = "type", content = "data")]
