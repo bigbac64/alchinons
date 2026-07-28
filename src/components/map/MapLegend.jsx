@@ -1,12 +1,14 @@
 import React from 'react';
 import { useMap } from '../../providers/map/MapProvider.jsx';
+import Panel from '../ui/Panel.jsx';
+import SectionHeader from '../ui/SectionHeader.jsx';
 
 const MapLegend = () => {
   const { terrain } = useMap();
 
   return (
-    <div className="rounded-xl border border-slate-700 bg-[#161d2e] p-4">
-      <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-slate-400">Légende</h2>
+    <Panel className="p-4">
+      <SectionHeader className="mb-3">Légende</SectionHeader>
       <ul className="grid grid-cols-2 gap-2 text-sm text-slate-300">
         {terrain && Object.entries(terrain).map(([id, t]) => (
           <li key={id} className="flex items-center gap-2">
@@ -18,7 +20,7 @@ const MapLegend = () => {
           </li>
         ))}
       </ul>
-    </div>
+    </Panel>
   );
 };
 

@@ -1,10 +1,12 @@
-import Slot from "../dnd/Slot.jsx";
+import Slot from "../ui/dnd/Slot.jsx";
+import Panel from "../ui/Panel.jsx";
+import SectionHeader from "../ui/SectionHeader.jsx";
 
 const Inventory = ({ className, inventory, name = "Inventaire", ...other }) => {
   return (
-    <div className={`rounded-xl border border-slate-700 bg-[#161d2e] ${className}`} {...other}>
+    <Panel className={className} {...other}>
       <div className="border-b border-slate-700 px-4 py-3">
-        <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-400">{name}</h2>
+        <SectionHeader>{name}</SectionHeader>
       </div>
       {inventory?.items?.length ? (
         <ul className="divide-y divide-slate-700/60">
@@ -15,7 +17,7 @@ const Inventory = ({ className, inventory, name = "Inventaire", ...other }) => {
       ) : (
         <p className="px-4 py-5 text-center text-sm italic text-slate-500">Inventaire vide.</p>
       )}
-    </div>
+    </Panel>
   );
 };
 

@@ -1,7 +1,9 @@
 import { usePlayer } from "../providers/map/PlayerProvider.jsx";
 import HexGrid from "../components/map/HexGrid.jsx";
 import MapLegend from "../components/map/MapLegend.jsx";
-import Button from "../components/Button/Button.jsx";
+import Button from "../components/ui/Button/Button.jsx";
+import Panel from "../components/ui/Panel.jsx";
+import SectionHeader from "../components/ui/SectionHeader.jsx";
 import {Link} from "react-router-dom";
 
 function Carte() {
@@ -20,10 +22,10 @@ function Carte() {
         </div>
 
         <div className="flex flex-col gap-4">
-          <div className="rounded-xl border border-slate-700 bg-[#161d2e] p-4">
-            <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-400">Case actuelle</h2>
+          <Panel className="p-4">
+            <SectionHeader>Case actuelle</SectionHeader>
             <p className="mt-2 text-lg text-slate-100">{currentTile?.label ?? "—"}</p>
-          </div>
+          </Panel>
 
           {feedback && (
             <div className="rounded-lg border border-amber-700/50 bg-amber-950/40 px-4 py-2 text-sm text-amber-200">

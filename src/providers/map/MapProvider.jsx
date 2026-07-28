@@ -3,7 +3,7 @@ import Vector from '../../utils/vector.js';
 import Matrix from '../../utils/matrix.js';
 import Hexagon from '../../utils/hexagone.js';
 import { HEX_SIZE, HEX_GAP } from '../../config/mapConfig.js';
-import {getMap, getTerrain} from "../../utils/api.js";
+import {getMap, getTerrain} from "../../api/engine.js";
 
 const MapContext = createContext(null);
 

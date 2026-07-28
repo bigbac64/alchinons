@@ -1,16 +1,10 @@
-import Button from "../components/Button/Button.jsx";
+import Button from "../components/ui/Button/Button.jsx";
 import Inventory from "../components/inventory/Inventory.jsx";
 import {useInventory} from "../providers/InventoryProvider.jsx";
-import {gather} from "../utils/api.js";
-import {useEffect} from "react";
+import {gather} from "../api/engine.js";
 
 function Home() {
   const {player, warehouse} = useInventory();
-
-  useEffect(() => {
-    console.log("Player inventory: ", player);
-    console.log("Warehouse inventory: ", warehouse);
-  }, [player, warehouse]);
 
   return (
     <div className="mx-auto max-w-2xl px-6 py-10">
@@ -20,7 +14,7 @@ function Home() {
       <div className="mb-6">
         <Button
           variant="dumper"
-          onComplete={gather}
+          onClick={gather}
         >
           <span>⚗</span>
           Récolter
@@ -31,7 +25,7 @@ function Home() {
         <Button
           variant="hold"
           holdDuration={2000}
-          onComplete={gather}
+          onClick={gather}
         >
           <span>⚗</span>
           Récolter

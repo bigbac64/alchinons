@@ -1,7 +1,12 @@
 import { forwardRef, useRef, useState } from "react";
 import { motion, animate } from "framer-motion";
 
-import { shake } from "../../utils/animation";
+import { shake } from "../../../animations/shake.js";
+import { SPRING_POP } from "../../../animations/springs.js";
+import { Fade } from "../../../animations/presets.js";
+import { useMergedRefs } from "../../../hooks/useMergedRefs.js";
+import { PILL_BUTTON_BASE } from "./styles.js";
+import { cx } from "../classNames.js";
 
 const ButtonDumper = forwardRef(({
       children,
@@ -17,18 +22,7 @@ const ButtonDumper = forwardRef(({
   const [flash, setFlash] = useState(false);
   const [pressed,setPressed] = useState(false);
 
-// fusion ref interne + externe
-  function setRefs(node){
-
-    buttonRef.current = node;
-
-    if(typeof ref === "function"){
-      ref(node);
-    }
-    else if(ref){
-      ref.current = node;
-    }
-  }
+  const setRefs = useMergedRefs(buttonRef, ref);
 
   async function handleClick(){
     if(disabled)
@@ -101,11 +95,7 @@ const ButtonDumper = forwardRef(({
           "0 10px 20px rgba(0,0,0,.35)"
         ]
       },
-      {
-        type: "spring",
-        stiffness: 400,
-        damping: 18
-      }
+      SPRING_POP
     ).finished;
 
     setPressed(false);
@@ -113,21 +103,18 @@ const ButtonDumper = forwardRef(({
   }
 
   return <motion.button ref={setRefs} disabled={disabled} onClick={handleClick}
-            className={`relative
-                       inline-flex items-center justify-center gap-2 rounded-lg
-                       px-5 py-2.5
-                       font-semibold text-white
-                       bg-emerald-600 border-b-4 border-emerald-900
-                       shadow-lg shadow-emerald-900/40
-                       select-none
-                       disabled:opacity-50 ${className}`}
+            className={cx(
+              "relative inline-flex items-center justify-center gap-2 rounded-lg",
+              "px-5 py-2.5 font-semibold text-white",
+              "bg-emerald-600 border-b-4 border-emerald-900",
+              "shadow-lg shadow-emerald-900/40 select-none",
+              PILL_BUTTON_BASE,
+              className
+            )}
     >
       {pressed && (
           <motion.span className="absolute inset-0 bg-white/20 pointer-events-none"
-            initial={{
-              opacity: 0
-            }}
-
+            {...Fade}
             animate={{
               opacity: [0, 1, 0]
             }}

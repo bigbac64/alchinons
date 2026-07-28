@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { getTile } from "../../utils/api.js";
+import { useTile } from "../../hooks/useTile.js";
 
 export const TILE_SIZE = 400;
 
@@ -10,18 +9,7 @@ export const TILE_SIZE = 400;
  * moteur qui décide, via hit-test, quelle zone a été touchée.
  */
 export default function TileCanvas({ position, onGather = () => {}, className = "" }) {
-  const [tile, setTile] = useState(null);
-
-  useEffect(() => {
-    if (!position) return;
-    let cancelled = false;
-    getTile(position).then(view => {
-      if (!cancelled) setTile(view ?? null);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [position?.x, position?.y]);
+  const tile = useTile(position);
 
   const handleClick = (event) => {
     const rect = event.currentTarget.getBoundingClientRect();

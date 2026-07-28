@@ -1,18 +1,26 @@
-import { Link, Outlet } from "react-router-dom";
-import {usePlayer} from "../../providers/map/PlayerProvider.jsx";
+import { Outlet } from "react-router-dom";
+import NavBar from "../ui/NavBar.jsx";
+import { useIsCamp } from "../../hooks/useIsCamp.js";
 
 function CampLayout() {
-  const { currentTile } = usePlayer();
+  const isCamp = useIsCamp();
 
-  const isCamp = currentTile?.id === "camp";
+  const links = [
+    {
+      to: "/camp/craft",
+      label: "Imprimerie",
+      className: "font-medium text-slate-400 hover:text-emerald-400 transition-colors",
+    },
+    {
+      to: "/camp/oven",
+      label: "Four",
+      className: "font-medium text-slate-400 hover:text-emerald-400 transition-colors",
+    },
+  ];
 
   return isCamp && (
-    <div className="min-h-full bg-[#1e2535] text-slate-200">
-      <nav id="nav" className="flex justify-center gap-6 border-b border-slate-700 bg-[#12192a] p-4 shadow-md">
-        <Link to="/camp/craft" className="font-medium text-slate-400 hover:text-emerald-400 transition-colors">Imprimerie</Link>
-        <Link to="/camp/oven" className="font-medium text-slate-400 hover:text-emerald-400 transition-colors">Four</Link>
-        <Link to="/craft" className="font-medium text-slate-400 hover:text-emerald-400 transition-colors">Craft</Link>
-      </nav>
+    <div className="min-h-full text-slate-200">
+      <NavBar links={links} className="bg-surface-nav" />
       <Outlet />
     </div>
   );

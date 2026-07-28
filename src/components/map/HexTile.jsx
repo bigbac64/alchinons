@@ -35,4 +35,4 @@ const HexTile = ({ at, position, cell, walkable, color, isHovered, isCurrent, on
   );
 };
 
-export default HexTile;
+export default React.memo(HexTile);

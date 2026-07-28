@@ -1,6 +1,12 @@
 @import "tailwindcss";
 
+@theme {
+    --color-surface-app: #1e2535;
+    --color-surface-panel: #161d2e;
+    --color-surface-nav: #12192a;
+}
+
 body {
-    background-color: #1e2535;
+    background-color: var(--color-surface-app);
     overflow: hidden;
 }

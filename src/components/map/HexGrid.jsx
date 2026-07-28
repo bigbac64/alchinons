@@ -45,7 +45,7 @@ const HexGrid = ({ className = '' }) => {
         viewBox={frame.join(' ')}
         preserveAspectRatio="xMidYMid meet"
         onWheel={handleWheel}
-        className="h-full w-full rounded-xl border border-slate-700 bg-[#161d2e] shadow-xl"
+        className="h-full w-full rounded-xl border border-slate-700 bg-surface-panel shadow-xl"
       >
         {map.flat().map((terrain, index) => {
           const width = map.length.x;

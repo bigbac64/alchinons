@@ -1,6 +1,8 @@
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import Button from "../components/Button/Button.jsx";
+import Button from "../components/ui/Button/Button.jsx";
+import SectionHeader from "../components/ui/SectionHeader.jsx";
+import { Fade } from "../animations/presets.js";
 
 function NotFound() {
   const navigate = useNavigate();
@@ -8,8 +10,8 @@ function NotFound() {
   return (
     <div className="mx-auto flex max-w-2xl flex-col items-center px-6 py-24 text-center">
       <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ ...Fade.initial, y: 12 }}
+        animate={{ ...Fade.animate, y: 0 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
       >
         <motion.span
@@ -20,9 +22,9 @@ function NotFound() {
           ⚗
         </motion.span>
 
-        <p className="mb-2 text-sm uppercase tracking-widest text-slate-400">
+        <SectionHeader as="p" className="mb-2">
           Formule inconnue
-        </p>
+        </SectionHeader>
 
         <h1 className="mb-4 text-4xl font-bold tracking-tight text-slate-100">
           Cette page s'est volatilisée
@@ -30,7 +32,7 @@ function NotFound() {
 
         <p className="mb-10 text-slate-400">
           Le grimoire ne contient aucune recette à{" "}
-          <code className="rounded bg-[#161d2e] px-1.5 py-0.5 text-emerald-400">
+          <code className="rounded bg-surface-panel px-1.5 py-0.5 text-emerald-400">
             {typeof window !== "undefined" ? window.location.pathname : ""}
           </code>
           . Elle a peut-être raté dans le chaudron.

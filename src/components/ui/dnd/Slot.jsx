@@ -1,10 +1,4 @@
-const RESOURCE_ICONS = {
-  Wood: "🪵",
-  Stone: "🪨",
-  Plank: "🪵",
-  Charcoal: "⚫",
-  Berry: "🍓",
-};
+import { RESOURCE_ICONS } from "../../../config/resources.js";
 
 function ResourceIcon({ resource, className = "text-xl" }) {
   return <span className={className}>{RESOURCE_ICONS[resource] ?? "❔"}</span>;

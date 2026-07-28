@@ -1,14 +1,11 @@
 import { forwardRef } from "react";
 import { useDroppable } from "@dnd-kit/core";
+import { useMergedRefs } from "../../../hooks/useMergedRefs.js";
 
 const DropZone = forwardRef(({ className, id, children, ...other }, ref) => {
   const { isOver, setNodeRef } = useDroppable({ id });
 
-  function setRefs(node) {
-    setNodeRef(node);
-    if (typeof ref === "function") ref(node);
-    else if (ref) ref.current = node;
-  }
+  const setRefs = useMergedRefs(setNodeRef, ref);
 
   return (
     <div
@@ -17,7 +14,7 @@ const DropZone = forwardRef(({ className, id, children, ...other }, ref) => {
                 absolute
                 rounded-lg
                 border-2
-                ${isOver ? "border-blue-500" : "border-gray-500"}
+                ${isOver ? "border-blue-500" : "border-slate-600"}
                 ${className}
             `}
       {...other}

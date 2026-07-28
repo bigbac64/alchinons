@@ -1,5 +1,5 @@
 import { useId, useMemo } from "react";
-import Slot from "../dnd/Slot.jsx";
+import Slot from "../ui/dnd/Slot.jsx";
 
 function resourceQuantity(inventory, resourceName) {
   return inventory?.items?.find((item) => item.name === resourceName)?.quantity ?? 0;
@@ -31,7 +31,7 @@ export default function ScrollCraft({ recipe, inventory, active = false, classNa
 
   return (
     <div
-      className={`w-3xs rounded-xl border overflow-hidden bg-[#161d2e] ${active ? "border-emerald-400 shadow-md" : "border-slate-800 shadow-2xl"} ${className}`}
+      className={`w-3xs rounded-xl border overflow-hidden bg-surface-panel ${active ? "border-emerald-400 shadow-md" : "border-slate-800 shadow-2xl"} ${className}`}
     >
       <h3 className="text-center text-m font-semibold uppercase tracking-widest text-slate-400 bg-slate-700">
         {recipe.label}

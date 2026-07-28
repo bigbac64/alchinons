@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import {getInventory, listenEngineEvents} from "../utils/api.js";
+import {getInventory, listenEngineEvents} from "../api/engine.js";
 
 const InventoryContext = createContext(null);
 

@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { motion, useMotionValue, animate } from 'framer-motion';
+import { SPRING_TOKEN_MOVE } from '../../animations/springs.js';
 
 
 /**
@@ -14,18 +15,8 @@ const PlayerToken = ({ position, radius }) => {
   const bounce = useMotionValue(1);
 
   useEffect(() => {
-    const controlsX = animate(x, position.x, {
-      type: 'spring',
-      stiffness: 260,
-      damping: 22,
-      mass: 0.6,
-    });
-    const controlsY = animate(y, position.y, {
-      type: 'spring',
-      stiffness: 260,
-      damping: 22,
-      mass: 0.6,
-    });
+    const controlsX = animate(x, position.x, SPRING_TOKEN_MOVE);
+    const controlsY = animate(y, position.y, SPRING_TOKEN_MOVE);
     // petit "rebond" à chaque étape, pour accentuer la sensation de marche
     const controlsBounce = animate(bounce, [1, 1.16, 1], {
       duration: 0.28,

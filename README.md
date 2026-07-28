@@ -57,3 +57,21 @@ Engine
         ├── movement/   (déplacement du joueur, pathfinding)
         └── gather/     (cueillette/récolte, résolution de loot)
 ```
+
+## Frontend development
+
+Voir [`FRONTEND_GUIDELINES.md`](./FRONTEND_GUIDELINES.md) pour la référence complète (principes, organisation des dossiers, composition, animations, style Tailwind, documentation). Résumé de l'organisation cible de `src/` :
+
+```
+src/
+├── pages/          (orchestration route-level)
+├── components/
+│   ├── ui/         (primitives génériques : zéro Context, zéro appel moteur)
+│   └── <domaine>/  (craft/, map/, terrain/, navigation/ — composent les primitives ui/)
+├── providers/      (Context + hook public : état partagé entre pages)
+├── hooks/          (logique réutilisable sans Context propre)
+├── animations/     (presets framer-motion nommés et partagés)
+├── api/            (unique passerelle Tauri : invoke/listen)
+├── config/         (constantes statiques transverses)
+└── utils/          (algorithmes purs, sans effet de bord)
+```

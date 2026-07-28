@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import Vector from '../../utils/vector.js';
 import { useMap } from './MapProvider.jsx';
 import {listen} from "@tauri-apps/api/event";
-import {getPlayer, listenEngineEvents, move} from "../../utils/api.js";
+import {getPlayer, listenEngineEvents, move} from "../../api/engine.js";
 
 const PlayerContext = createContext(null);
 const STEP_DURATION_MS = 220;
@@ -12,6 +12,10 @@ const FEEDBACK_DURATION_MS = 2500;
  * PlayerProvider - déplace le joueur case par case le long du chemin le plus
  * court (A*) vers la case cliquée, et remonte un message clair quand le
  * déplacement est impossible plutôt que de rester silencieux.
+ *
+ * Doit être monté sous `MapProvider` (voir `AppProviders.jsx`) : il appelle
+ * `useMap()` en interne pour valider qu'une case est praticable avant
+ * d'envoyer une commande de déplacement.
  */
 export const PlayerProvider = ({ children }) => {
   const { map, terrain } = useMap();
@@ -50,7 +54,6 @@ export const PlayerProvider = ({ children }) => {
     const unlisten = listenEngineEvents({
       MovePath: (event) => {
         const path = event?.path;
-        console.log("Moving to path: ", event);
         if (path.length < 2) {
           setFeedback('Vous êtes déjà sur cette case.');
           return;
