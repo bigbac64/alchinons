@@ -114,16 +114,6 @@ export default function Plain({
           <div className="border-b border-slate-700 px-5 py-4">
             <SectionHeader>Actions</SectionHeader>
           </div>
-
-          <div className="flex flex-col gap-3 p-5">
-            <ButtonHold
-              holdDuration={800}
-              disabled={searchDisabled}
-              onClick={() => onSearch({ x: 200, y: 200 })}
-            >
-              Fouiller
-            </ButtonHold>
-          </div>
         </Panel>
 
         {/* Inventaire */}
