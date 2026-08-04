@@ -7,4 +7,8 @@ export const RESOURCE_ICONS = {
   Plank: "🪵",
   Charcoal: "⚫",
   Berry: "🍓",
+  IronOre: "🔩",
+  Crystal: "💎",
+  Mushroom: "🍄",
+  Flower: "🌸",
 };

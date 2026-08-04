@@ -1,4 +1,4 @@
-pub mod area;
+pub mod resource_node;
 pub mod tile;
 pub mod terrain;
 pub mod layout;

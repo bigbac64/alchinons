@@ -4,6 +4,7 @@ use serde::Deserialize;
 use crate::inventory::command::TransferInventoryPayload;
 use crate::craft::command::CraftPayload;
 use crate::position::Position;
+use crate::resource::Resource;
 
 /// Marqueur : nom du point d'entrée Tauri unique (`invoke(NAME, {command})`).
 /// N'est pas consommé par `generate_handler!` (qui a besoin d'un identifiant
@@ -16,10 +17,15 @@ pub trait EngineCommand {
 
 #[derive(Deserialize)]
 pub enum Command {
-    /// `position` est le point cliqué dans le repère local de la tile (0..400,
-    /// ancrage haut-gauche) — pas une case de la grille, contrairement à `Move`.
-    Gather {
-        position: Position,
+    /// Tire les ressources disponibles sur la tile courante du joueur et les propose
+    /// à la sélection — voir `gather::system::GatherSystem::propose`. Ne modifie pas
+    /// l'inventaire : c'est `GatherSelect` qui valide un choix.
+    Gather,
+    /// Valide le choix du joueur parmi la dernière offre de `Gather`, l'ajoute à son
+    /// inventaire si elle en faisait partie, puis reformule immédiatement une nouvelle
+    /// proposition — voir `gather::system::GatherSystem::select`.
+    GatherSelect {
+        resource: Resource,
     },
     Move {
         position: Position
@@ -34,9 +40,6 @@ pub enum Command {
     /// Getter
     GetMap,
     GetTerrain,
-    GetTile {
-        position: Position,
-    },
     GetRecipes,
     GetPlayer,
     GetInventory {

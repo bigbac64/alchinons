@@ -1,4 +1,5 @@
 use crate::craft::state::CraftState;
+use crate::gather::state::GatherState;
 use crate::inventory::state::InventoryState;
 use crate::player::state::PlayerState;
 use crate::world::layout::MAP_LAYOUT;
@@ -9,6 +10,7 @@ pub struct GameState {
     pub(crate) player: PlayerState,
     pub(crate) map: Map,
     pub(crate) craft: CraftState,
+    pub(crate) gather: GatherState,
 }
 
 impl GameState {
@@ -18,6 +20,7 @@ impl GameState {
             player: PlayerState::new(),
             map: Map::from_array::<11, 10>(&MAP_LAYOUT),
             craft: CraftState::new(),
+            gather: GatherState::new(),
         }
     }
 }

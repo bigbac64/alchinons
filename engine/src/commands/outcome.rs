@@ -1,9 +1,10 @@
 use serde::Serialize;
 use crate::position::Position;
 use crate::events::Event;
-use crate::world::view::{MapView, TerrainView, TileView};
+use crate::world::view::{MapView, TerrainView};
 use crate::inventory::view::InventoryView;
 use crate::craft::view::RecipeView;
+use crate::gather::view::GatherOptionView;
 
 #[derive(Serialize)]
 #[serde(tag = "type", content = "data")]
@@ -13,7 +14,7 @@ pub enum CommandOutput {
     Terrain(TerrainView),
     Recipes(RecipeView),
     Player(Position),
-    Tile(TileView),
+    GatherOptions(Vec<GatherOptionView>),
     None,
 }
 

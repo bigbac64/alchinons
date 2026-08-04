@@ -1,198 +1,81 @@
-use crate::position::Position;
-use crate::world::area::{Area, AreaType, Shape};
+use crate::resource::LootEntry;
+use crate::world::resource_node::ResourceNode;
 use crate::world::terrain::Terrain;
-use crate::world::view::TileView;
 
 pub struct Tile {
-    pub areas: &'static [Area],
+    pub nodes: &'static [ResourceNode],
     pub terrain: Terrain,
 }
 
-// les tiles font 400x400 anchor en top left
 const PLAIN_TILE_1: Tile = Tile {
-    areas: &[Area{
-            area_type: AreaType::Grass,
-            position: Position{x: 0, y: 100},
-            hitbox: Shape::Rectangle{width: 400, height: 300},
-        },
-        Area{
-            area_type: AreaType::Sky,
-            position: Position{x: 0, y: 0},
-            hitbox: Shape::Rectangle{width: 400, height: 100},
-        },
-
-    ],
+    nodes: &[ResourceNode::Grass],
     terrain: Terrain::Plain,
 };
 
 const PLAIN_TILE_2: Tile = Tile {
-    areas: &[Area{
-            area_type: AreaType::Grass,
-            position: Position{x: 0, y: 100},
-            hitbox: Shape::Rectangle{width: 400, height: 280},
-        },
-        Area{
-            area_type: AreaType::Sky,
-            position: Position{x: 0, y: 0},
-            hitbox: Shape::Rectangle{width: 400, height: 120},
-        },
-        Area{
-            area_type: AreaType::Rock,
-            position: Position{x: 280, y: 240},
-            hitbox: Shape::Circle{radius: 20},
-        },
-        Area{
-            area_type: AreaType::Rock,
-            position: Position{x: 60, y: 340},
-            hitbox: Shape::Circle{radius: 16},
-        },
-
-    ],
+    nodes: &[ResourceNode::Grass, ResourceNode::Rock],
     terrain: Terrain::Plain,
 };
 
 const PLAIN_TILE_3: Tile = Tile {
-    areas: &[Area{
-            area_type: AreaType::Grass,
-            position: Position{x: 0, y: 100},
-            hitbox: Shape::Rectangle{width: 400, height: 300},
-        },
-        Area{
-            area_type: AreaType::Sky,
-            position: Position{x: 0, y: 0},
-            hitbox: Shape::Rectangle{width: 400, height: 100},
-        },
-        Area{
-            area_type: AreaType::Tree,
-            position: Position{x: 220, y: 230},
-            hitbox: Shape::Circle{radius: 30},
-        },
-    ],
+    nodes: &[ResourceNode::Grass, ResourceNode::Bush],
+    terrain: Terrain::Plain,
+};
+
+// tile rare : parterre de fleurs, tirée avec une faible probabilité (voir pool())
+const PLAIN_TILE_FLOWER: Tile = Tile {
+    nodes: &[ResourceNode::Grass, ResourceNode::Flower],
     terrain: Terrain::Plain,
 };
 
 const FOREST_TILE_1: Tile = Tile {
-    areas: &[Area{
-            area_type: AreaType::Grass,
-            position: Position{x: 0, y: 80},
-            hitbox: Shape::Rectangle{width: 400, height: 320},
-        },
-        Area{
-            area_type: AreaType::Sky,
-            position: Position{x: 0, y: 0},
-            hitbox: Shape::Rectangle{width: 400, height: 80},
-        },
-        Area{
-            area_type: AreaType::Tree,
-            position: Position{x: 100, y: 200},
-            hitbox: Shape::Circle{radius: 35},
-        },
-        Area{
-            area_type: AreaType::Tree,
-            position: Position{x: 290, y: 260},
-            hitbox: Shape::Circle{radius: 28},
-        },
-    ],
+    nodes: &[ResourceNode::Grass, ResourceNode::Tree],
+    terrain: Terrain::Forest,
+};
+
+// tile rare : clairière à champignons, tirée avec une faible probabilité (voir pool())
+const FOREST_TILE_MUSHROOM: Tile = Tile {
+    nodes: &[ResourceNode::Grass, ResourceNode::Mushroom],
     terrain: Terrain::Forest,
 };
 
 const FOREST_TILE_2: Tile = Tile {
-    areas: &[Area{
-            area_type: AreaType::Grass,
-            position: Position{x: 0, y: 80},
-            hitbox: Shape::Rectangle{width: 400, height: 320},
-        },
-        Area{
-            area_type: AreaType::Sky,
-            position: Position{x: 0, y: 0},
-            hitbox: Shape::Rectangle{width: 400, height: 80},
-        },
-        Area{
-            area_type: AreaType::Tree,
-            position: Position{x: 320, y: 180},
-            hitbox: Shape::Circle{radius: 32},
-        },
-        Area{
-            area_type: AreaType::Bush,
-            position: Position{x: 110, y: 300},
-            hitbox: Shape::Circle{radius: 24},
-        },
-    ],
+    nodes: &[ResourceNode::Grass, ResourceNode::Tree, ResourceNode::Bush],
     terrain: Terrain::Forest,
 };
 
-const CLIFF_TILE_1: Tile = Tile {
-    areas: &[Area{
-            area_type: AreaType::Rock,
-            position: Position{x: 0, y: 120},
-            hitbox: Shape::Rectangle{width: 400, height: 280},
-        },
-        Area{
-            area_type: AreaType::Sky,
-            position: Position{x: 0, y: 0},
-            hitbox: Shape::Rectangle{width: 400, height: 120},
-        },
-    ],
+// seule variante "rocher" du Cliff : les deux anciennes tiles CLIFF_TILE_1/2 ne se
+// distinguaient que par la disposition visuelle des zones (même table de loot), une
+// distinction qui n'a plus de sens sans géométrie de clic — voir pool() pour la
+// pondération conservée via une double référence à cette même tile.
+const CLIFF_TILE_ROCK: Tile = Tile {
+    nodes: &[ResourceNode::Rock],
     terrain: Terrain::Cliff,
 };
 
-const CLIFF_TILE_2: Tile = Tile {
-    areas: &[Area{
-            area_type: AreaType::Rock,
-            position: Position{x: 0, y: 120},
-            hitbox: Shape::Rectangle{width: 400, height: 280},
-        },
-        Area{
-            area_type: AreaType::Sky,
-            position: Position{x: 0, y: 0},
-            hitbox: Shape::Rectangle{width: 400, height: 120},
-        },
-        Area{
-            area_type: AreaType::Rock,
-            position: Position{x: 110, y: 300},
-            hitbox: Shape::Circle{radius: 25},
-        },
-        Area{
-            area_type: AreaType::Rock,
-            position: Position{x: 300, y: 340},
-            hitbox: Shape::Circle{radius: 18},
-        },
-    ],
+const CLIFF_TILE_IRON: Tile = Tile {
+    nodes: &[ResourceNode::Rock, ResourceNode::OreVein],
+    terrain: Terrain::Cliff,
+};
+
+// tile rare : filon de cristal, tirée avec une faible probabilité (voir pool())
+const CLIFF_TILE_CRYSTAL: Tile = Tile {
+    nodes: &[ResourceNode::Rock, ResourceNode::Crystal],
     terrain: Terrain::Cliff,
 };
 
 const WATER_TILE: Tile = Tile {
-    areas: &[Area{
-            area_type: AreaType::Water,
-            position: Position{x: 0, y: 0},
-            hitbox: Shape::Rectangle{width: 400, height: 400},
-        },
-    ],
+    nodes: &[],
     terrain: Terrain::Water,
 };
 
 const CAMP_TILE: Tile = Tile {
-    areas: &[Area{
-            area_type: AreaType::Ground,
-            position: Position{x: 0, y: 100},
-            hitbox: Shape::Rectangle{width: 400, height: 300},
-        },
-        Area{
-            area_type: AreaType::Sky,
-            position: Position{x: 0, y: 0},
-            hitbox: Shape::Rectangle{width: 400, height: 100},
-        },
-    ],
+    nodes: &[],
     terrain: Terrain::Camp,
 };
 
 const VOID_TILE: Tile = Tile {
-    areas: &[Area{
-            area_type: AreaType::Sky,
-            position: Position{x: 0, y: 0},
-            hitbox: Shape::Rectangle{width: 400, height: 400},
-        },
-    ],
+    nodes: &[],
     terrain: Terrain::Void,
 };
 
@@ -204,17 +87,34 @@ impl Tile {
         match terrain {
             Terrain::Void => &[&VOID_TILE],
             Terrain::Camp => &[&CAMP_TILE],
-            Terrain::Plain => &[&PLAIN_TILE_1, &PLAIN_TILE_2, &PLAIN_TILE_3],
-            Terrain::Forest => &[&FOREST_TILE_1, &FOREST_TILE_2],
+            // tirage uniforme (voir Map::pick_tile) : les tiles communes sont dupliquées
+            // pour que PLAIN_TILE_FLOWER ne sorte qu'~1 fois sur 7 (rare, comme le champignon)
+            Terrain::Plain => &[
+                &PLAIN_TILE_1, &PLAIN_TILE_2, &PLAIN_TILE_3,
+                &PLAIN_TILE_1, &PLAIN_TILE_2, &PLAIN_TILE_3,
+                &PLAIN_TILE_FLOWER,
+            ],
+            // FOREST_TILE_MUSHROOM ~1/7 : même logique de rareté que la fleur
+            Terrain::Forest => &[
+                &FOREST_TILE_1, &FOREST_TILE_2,
+                &FOREST_TILE_1, &FOREST_TILE_2,
+                &FOREST_TILE_1, &FOREST_TILE_2,
+                &FOREST_TILE_MUSHROOM,
+            ],
             Terrain::Water => &[&WATER_TILE],
-            Terrain::Cliff => &[&CLIFF_TILE_1, &CLIFF_TILE_2],
+            // CLIFF_TILE_IRON (fer) est une tile courante ; CLIFF_TILE_CRYSTAL reste rare (~1/7)
+            Terrain::Cliff => &[
+                &CLIFF_TILE_ROCK, &CLIFF_TILE_ROCK, &CLIFF_TILE_ROCK, &CLIFF_TILE_ROCK,
+                &CLIFF_TILE_IRON, &CLIFF_TILE_IRON,
+                &CLIFF_TILE_CRYSTAL,
+            ],
         }
     }
 
-    pub fn to_view(&self) -> TileView {
-        TileView {
-            terrain: format!("{:?}", self.terrain).to_lowercase(),
-            areas: self.areas.iter().map(Area::to_view).collect(),
-        }
+    /// Concatène les tables de loot de tous les gisements de cette tile (une tile peut
+    /// combiner plusieurs `ResourceNode`, ex. Grass + Rock) en une seule liste consommée
+    /// par `Looting::generate`.
+    pub fn loot_pool(&self) -> Vec<LootEntry> {
+        self.nodes.iter().flat_map(|node| node.loot().iter().copied()).collect()
     }
 }

@@ -1,31 +1,48 @@
-use crate::position::Position;
+use std::collections::HashMap;
+use crate::resource::Resource;
 use crate::state::GameState;
 use crate::gather::utils::loot::Looting;
+use crate::gather::view::GatherOptionView;
 use crate::events::Event;
 
 pub struct GatherSystem {}
 
-
 impl GatherSystem {
     pub fn new() -> Self {Self {}}
 
-    /// `clicked` est le point cliqué dans le repère local de la tile (0..400).
-    pub fn execute(&self, clicked: Position, states: &mut GameState) -> Vec<Event>{
-        match states.map.get_tile(states.player.player.position) {
-            Some(tile) => {
-                // dernière area (la plus "au dessus" visuellement) dont la hitbox contient le clic
-                let loot = tile.areas.iter().rev()
-                    .find(|area| area.contains(clicked))
-                    .map(|area| area.loot())
-                    .unwrap_or(&[]);
+    /// Tire les ressources disponibles sur la tile courante du joueur et les propose
+    /// à la sélection (voir `GatherState::propose`) — rien n'est ajouté à l'inventaire
+    /// tant que `select` n'a pas été appelé avec l'une des ressources proposées.
+    pub fn propose(&self, states: &mut GameState) -> Vec<GatherOptionView> {
+        let loot = states.map.get_tile(states.player.player.position)
+            .map(|tile| tile.loot_pool())
+            .unwrap_or_default();
 
-                let resources = Looting::generate(loot);
+        let options = Looting::generate(&loot);
+        states.gather.propose(options.clone());
 
-                states.inventory.player.add_multi(resources);
+        Self::to_view(options)
+    }
 
+    /// Valide `resource` contre la dernière offre proposée : si elle en faisait partie,
+    /// l'ajoute à l'inventaire du joueur. Reformule ensuite immédiatement une nouvelle
+    /// proposition dans tous les cas (boucle de fouille continue, cf. Exploitation.jsx).
+    pub fn select(&self, resource: Resource, states: &mut GameState) -> (Vec<GatherOptionView>, Vec<Event>) {
+        let events = match states.gather.resolve(resource) {
+            Some(amount) => {
+                states.inventory.player.add(resource, amount);
                 vec![Event::InventoryUpdated { changes: states.inventory.player.to_view() }]
             },
-            None => vec![], // Event error ?
-        }
+            None => vec![],
+        };
+
+        (self.propose(states), events)
+    }
+
+    fn to_view(options: HashMap<Resource, u32>) -> Vec<GatherOptionView> {
+        options.into_iter()
+            .filter(|(_, amount)| *amount > 0)
+            .map(|(resource, amount)| GatherOptionView { resource, amount })
+            .collect()
     }
 }

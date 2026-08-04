@@ -8,10 +8,14 @@ pub enum Resource {
     Plank,
     Charcoal,
     Berry,
+    IronOre,
+    Crystal,
+    Mushroom,
+    Flower,
 }
 
 
-#[derive(Serialize)]
+#[derive(Copy, Clone, Serialize)]
 pub struct LootEntry {
     pub resource: Resource,
     pub infallible: u32,
