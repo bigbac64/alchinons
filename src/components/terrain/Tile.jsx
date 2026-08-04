@@ -6,6 +6,7 @@ import { cx } from "../ui/classNames.js";
 import { Fade } from "../../animations/presets.js";
 import { SPRING_POP } from "../../animations/springs.js";
 import { RESOURCE_ICONS } from "../../config/resources.js";
+import {useEffect, useState} from "react";
 
 // Texte d'ambiance par id de Terrain (voir engine/src/world/terrain.rs) ; un seul
 // consommateur pour l'instant donc pas besoin d'un fichier config/ dédié (cf. useTile.js).
@@ -37,6 +38,28 @@ export default function Tile({
                                 onSelect = () => {},
                                 onDiscoveryDone = () => {},
                               }) {
+  const [clickedResource, setClickedResource] = useState(null);
+  const [generation, setGeneration] = useState(0);
+
+  // Nouvelle offre reçue du moteur (chargement initial ou suite au select précédent) :
+  // on force un remount des cartes pour rejouer le fondu d'apparition, et on efface
+  // le clic précédent qui vient d'être consommé par ce nouveau lot.
+  useEffect(() => {
+    setGeneration((g) => g + 1);
+    setClickedResource(null);
+  }, [options]);
+
+  const onAnimatedSelect = (option) => {
+    setClickedResource(option.resource);
+    setTimeout(() =>  onSelect(option), 160)
+  }
+
+  const buttonVariants = {
+    idle: { opacity: 1, y: 0, scale: 1 },
+    clicked: { opacity: 0, y: 0, scale: 0.85 }, // disparition sur place
+    unclicked: { opacity: 0, scale: 0.85, y: 45 },      // fondu + translation vers le haut
+  };
+
   return (
     <div
       className="relative flex flex-col gap-6 overflow-hidden rounded-2xl p-6"
@@ -55,6 +78,7 @@ export default function Tile({
               exit={Fade.initial}
               transition={{ duration: 1.6, ease: "easeOut", times: [0, 0.15, 0.7, 1] }}
               onAnimationComplete={() => onDiscoveryDone(drop.uuid)}
+              layout
             >
               <span className="text-xl">{RESOURCE_ICONS[drop.name] ?? "❔"}</span>
               <span>+{drop.amount}</span>
@@ -81,27 +105,40 @@ export default function Tile({
         <Panel className="p-5">
           <SectionHeader>Récolte</SectionHeader>
 
-          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {options.length ? options.map(option => (
-              <motion.button
-                key={option.resource}
-                type="button"
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                transition={SPRING_POP}
-                onClick={() => onSelect(option)}
-                className={cx(
-                  "flex flex-col items-center gap-2 rounded-xl border-2 border-slate-700",
-                  "bg-slate-800/70 p-4 transition-colors hover:border-emerald-500"
-                )}
-              >
-                <span className="text-3xl">{RESOURCE_ICONS[option.resource] ?? "❔"}</span>
-                <span className="text-sm text-slate-200">{option.resource}</span>
-                <span className="rounded-md bg-slate-700 px-2 py-0.5 font-mono text-xs text-emerald-300">
-                  +{option.amount}
-                </span>
-              </motion.button>
-            )) : (
+          <div className="mt-4 flex gap-3 justify-center items-center">
+            {options.length ? options.map(option => {
+              const isClicked = clickedResource === option.resource;
+              const isDismissed = clickedResource != null && !isClicked;
+
+              return (
+                <motion.button
+                  key={`${generation}-${option.resource}`}
+                  type="button"
+                  initial={{ opacity: 0, y: 100}}
+                  animate={
+                    isClicked
+                      ? buttonVariants.clicked
+                      : isDismissed
+                        ? buttonVariants.unclicked
+                        : buttonVariants.idle  // animation de base à l'apparition
+                  }
+                  whileHover={{scale: 1.03}}
+                  whileTap={{scale: 0.97}}
+                  transition={SPRING_POP}
+                  onClick={() => onAnimatedSelect(option)}
+                  className={cx(
+                    "w-40 flex flex-col items-center gap-2 rounded-xl border-2 border-slate-700",
+                    "bg-slate-800/70 p-4 transition-colors hover:border-emerald-500"
+                  )}
+                >
+                  <span className="text-3xl">{RESOURCE_ICONS[option.resource] ?? "❔"}</span>
+                  <span className="text-sm text-slate-200">{option.resource}</span>
+                  <span className="rounded-md bg-slate-700 px-2 py-0.5 font-mono text-xs text-emerald-300">
+                    +{option.amount}
+                  </span>
+                </motion.button>
+              )
+            }) : (
               <p className="col-span-full py-6 text-center text-sm italic text-slate-500">
                 Rien à récolter ici pour l'instant.
               </p>

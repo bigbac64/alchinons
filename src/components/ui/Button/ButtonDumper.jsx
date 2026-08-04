@@ -7,6 +7,7 @@ import { Fade } from "../../../animations/presets.js";
 import { useMergedRefs } from "../../../hooks/useMergedRefs.js";
 import { PILL_BUTTON_BASE } from "./styles.js";
 import { cx } from "../classNames.js";
+import ButtonHold from "./ButtonHold.jsx";
 
 const ButtonDumper = forwardRef(({
       children,
@@ -25,7 +26,7 @@ const ButtonDumper = forwardRef(({
   const setRefs = useMergedRefs(buttonRef, ref);
 
   async function handleClick(){
-    if(disabled)
+    if(pressed || disabled)
       return;
 
     const button = buttonRef.current;
@@ -81,6 +82,8 @@ const ButtonDumper = forwardRef(({
       onClick();
     }
 
+    setPressed(false);
+
     /*
      * Retour du bouton
      */
@@ -97,8 +100,6 @@ const ButtonDumper = forwardRef(({
       },
       SPRING_POP
     ).finished;
-
-    setPressed(false);
 
   }
 
