@@ -1,4 +1,4 @@
-use crate::position::Position;
+use crate::position::{hex_distance, Position};
 use crate::world::tile::Tile;
 use crate::world::terrain::Terrain;
 use crate::world::view::MapView;
@@ -6,6 +6,7 @@ use crate::world::view::MapView;
 pub struct Map {
     map: Vec<Vec<Terrain>>,
     tiles: Vec<Vec<&'static Tile>>,
+    explored: Vec<Vec<bool>>,
 }
 
 impl Map {
@@ -13,10 +14,11 @@ impl Map {
         Self {
             map: vec![vec![Terrain::Void]],
             tiles: vec![vec![Self::pick_tile(Terrain::Void)]],
+            explored: vec![vec![true]],
         }
     }
 
-    pub fn from_array<const H: usize, const W: usize>(array: &[[Terrain; 11]; 10]) -> Self {
+    pub fn from_array<const ROWS: usize, const COLS: usize>(array: &[[Terrain; COLS]; ROWS]) -> Self {
         let map: Vec<Vec<Terrain>> = array.iter()
             .map(|row| row.iter()
                 .map(|&cell| cell).collect())
@@ -30,7 +32,39 @@ impl Map {
                 .collect())
             .collect();
 
-        Self { map, tiles }
+        let explored = vec![vec![false; COLS]; ROWS];
+
+        let mut instance = Self { map, tiles, explored };
+
+        // Brouillard initial : seul le camp (et son rayon direct) est visible au
+        // démarrage — le reste se dévoile via `reveal`, dont le déclenchement en
+        // cours de partie (ex. à chaque déplacement) reste à câbler plus tard.
+        if let Some(camp) = instance.find_camp() {
+            instance.reveal(camp, 1);
+        }
+
+        instance
+    }
+
+    fn find_camp(&self) -> Option<Position> {
+        self.map.iter().enumerate()
+            .find_map(|(y, row)| row.iter().enumerate()
+                .find_map(|(x, &terrain)| matches!(terrain, Terrain::Camp)
+                    .then(|| Position { x: x as u32, y: y as u32 })))
+    }
+
+    /// Dévoile la carte autour d'une position sur un rayon donné (distance
+    /// hexagonale, cases incluses). Purement additif : une case déjà explorée
+    /// ne redevient jamais brouillard.
+    pub fn reveal(&mut self, center: Position, radius: u32) {
+        for (y, row) in self.explored.iter_mut().enumerate() {
+            for (x, cell) in row.iter_mut().enumerate() {
+                let position = Position { x: x as u32, y: y as u32 };
+                if hex_distance(center, position) <= radius {
+                    *cell = true;
+                }
+            }
+        }
     }
 
     fn pick_tile(terrain: Terrain) -> &'static Tile {
@@ -68,7 +102,8 @@ impl Map {
                     .copied()
                     .map(|cell| format!("{:?}", cell).to_lowercase())
                     .collect()).
-                collect()
+                collect(),
+            explored: self.explored.clone(),
         }
     }
 }

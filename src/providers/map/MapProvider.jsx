@@ -30,12 +30,12 @@ export const MapProvider = ({ children }) => {
     (async () => {
       const { terrain } = await getTerrain();
       setTerrain(terrain);
-      const { map } = await getMap();
+      const { map, explored } = await getMap();
       if (!map) return;
       const matrix = new Matrix();
       matrix.make(new Vector(map[0].length, map.length), (at) => {
         const id = map[at.y][at.x];
-        return { id, ...terrain[id] };
+        return { id, explored: explored[at.y][at.x], ...terrain[id] };
       });
       setMap(matrix);
     })();

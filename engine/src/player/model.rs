@@ -7,7 +7,7 @@ pub struct Player {
 impl Player {
     pub fn new() -> Player {
         Player {
-            position: Position { x: 4, y: 4 }
+            position: Position { x: 7, y:  6 }
         }
     }
 }

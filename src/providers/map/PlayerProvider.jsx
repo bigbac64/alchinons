@@ -39,7 +39,12 @@ export const PlayerProvider = ({ children }) => {
   const moveTo = useCallback(
     async (target) => {
       if (isMoving || !map) return;
-      const destination = terrain[map.get(target).id];
+      const tile = map.get(target);
+      if (!tile?.explored) {
+        setFeedback('Cette case est encore dans le brouillard.');
+        return;
+      }
+      const destination = terrain[tile.id];
       if (!destination?.walkable) {
         setFeedback("Cette case n'est pas praticable.");
         return;

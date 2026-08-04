@@ -3,7 +3,9 @@ use serde::Serialize;
 
 #[derive(Serialize)]
 pub struct MapView {
-    pub(crate) map: Vec<Vec<String>>
+    pub(crate) map: Vec<Vec<String>>,
+    /// Masque de brouillard : `true` = case dévoilée. Même dimensions que `map`.
+    pub(crate) explored: Vec<Vec<bool>>,
 }
 
 #[derive(Serialize)]

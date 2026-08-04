@@ -1,6 +1,9 @@
 use std::cmp::Reverse;
 use std::collections::{BinaryHeap, HashMap};
 use crate::position::Position;
+// hex_distance vit dans `position` (type transverse) : `world` en a aussi besoin
+// pour le brouillard, et deux domaines ne se référencent jamais l'un l'autre.
+pub use crate::position::hex_distance;
 
 /// Nœud utilisé par l'algorithme A*.
 ///
@@ -19,25 +22,6 @@ pub struct PathNode {
 
     /// Position du nœud précédent dans le chemin reconstruit.
     parent: Option<Position>,
-}
-
-
-/// Convertit une position offset (odd-q) en coordonnées cubiques.
-/// Nécessaire pour calculer la vraie distance hexagonale.
-fn to_cube(p: Position) -> (i32, i32, i32) {
-    let x = p.x as i32;
-    let z = p.y as i32 - (x - (x & 1)) / 2;
-    (x, -x - z, z)
-}
-
-/// Distance hexagonale entre deux positions sur une grille odd-q offset.
-/// Utilise les coordonnées cubiques pour un résultat exact et symétrique.
-pub fn hex_distance(a: Position, b: Position) -> u32 {
-    let (ax, ay, az) = to_cube(a);
-    let (bx, by, bz) = to_cube(b);
-    (ax - bx).unsigned_abs()
-        .max((ay - by).unsigned_abs())
-        .max((az - bz).unsigned_abs())
 }
 
 

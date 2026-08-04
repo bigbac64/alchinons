@@ -18,7 +18,7 @@ impl GameState {
         Self {
             inventory: InventoryState::new(),
             player: PlayerState::new(),
-            map: Map::from_array::<11, 10>(&MAP_LAYOUT),
+            map: Map::from_array(&MAP_LAYOUT),
             craft: CraftState::new(),
             gather: GatherState::new(),
         }
