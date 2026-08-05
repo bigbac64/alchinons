@@ -5,7 +5,7 @@ import SectionHeader from "../ui/SectionHeader.jsx";
 import { cx } from "../ui/classNames.js";
 import { Fade } from "../../animations/presets.js";
 import { SPRING_POP } from "../../animations/springs.js";
-import { RESOURCE_ICONS } from "../../config/resources.js";
+import ResourceIcon from "../ui/ResourceIcon.jsx";
 import {useEffect, useState} from "react";
 
 // Texte d'ambiance par id de Terrain (voir engine/src/world/terrain.rs) ; un seul
@@ -80,7 +80,7 @@ export default function Tile({
               onAnimationComplete={() => onDiscoveryDone(drop.uuid)}
               layout
             >
-              <span className="text-xl">{RESOURCE_ICONS[drop.name] ?? "❔"}</span>
+              <ResourceIcon resource={drop.name} className="text-xl" />
               <span>+{drop.amount}</span>
             </motion.div>
           ))}
@@ -131,7 +131,7 @@ export default function Tile({
                     "bg-slate-800/70 p-4 transition-colors hover:border-emerald-500"
                   )}
                 >
-                  <span className="text-3xl">{RESOURCE_ICONS[option.resource] ?? "❔"}</span>
+                  <ResourceIcon resource={option.resource} className="text-3xl" />
                   <span className="text-sm text-slate-200">{option.resource}</span>
                   <span className="rounded-md bg-slate-700 px-2 py-0.5 font-mono text-xs text-emerald-300">
                     +{option.amount}

@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Eq, Hash, PartialEq, Copy, Clone, Debug, Serialize, Deserialize)]
 pub enum Resource {
     Grass,
+    Fiber,
     Wood,
     Stone,
     Plank,

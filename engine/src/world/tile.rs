@@ -1,46 +1,74 @@
-use crate::resource::LootEntry;
+use crate::resource::{LootEntry, Resource};
 use crate::world::resource_node::ResourceNode;
 use crate::world::terrain::Terrain;
 
 pub struct Tile {
-    pub nodes: &'static [ResourceNode],
+    pub loots: &'static [LootEntry],
     pub terrain: Terrain,
 }
 
+
+/////////////  PLAIN  ///////////////////
 const PLAIN_TILE_1: Tile = Tile {
-    nodes: &[ResourceNode::Grass],
+    loots: &[
+        LootEntry { resource: Resource::Grass, infallible: 1, bonus_max: 5, chance: 0.2 },
+        LootEntry { resource: Resource::Wood, infallible: 0, bonus_max: 2, chance: 0.2 },
+    ],
     terrain: Terrain::Plain,
 };
 
 const PLAIN_TILE_2: Tile = Tile {
-    nodes: &[ResourceNode::Grass, ResourceNode::Rock],
+    loots: &[
+        LootEntry { resource: Resource::Grass, infallible: 1, bonus_max: 4, chance: 0.27 },
+        LootEntry { resource: Resource::Stone, infallible: 0, bonus_max: 1, chance: 0.6 },
+
+    ],
     terrain: Terrain::Plain,
 };
 
 const PLAIN_TILE_3: Tile = Tile {
-    nodes: &[ResourceNode::Grass, ResourceNode::Bush],
+    loots: &[
+        LootEntry { resource: Resource::Grass, infallible: 1, bonus_max: 6, chance: 0.18 },
+        LootEntry { resource: Resource::Berry, infallible: 0, bonus_max: 3, chance: 0.8 },
+        LootEntry { resource: Resource::Wood, infallible: 0, bonus_max: 1, chance: 0.4 },
+    ],
     terrain: Terrain::Plain,
 };
 
 // tile rare : parterre de fleurs, tirée avec une faible probabilité (voir pool())
 const PLAIN_TILE_FLOWER: Tile = Tile {
-    nodes: &[ResourceNode::Grass, ResourceNode::Flower],
+    loots: &[
+        LootEntry { resource: Resource::Grass, infallible: 1, bonus_max: 8, chance: 0.18 },
+        LootEntry { resource: Resource::Flower, infallible: 0, bonus_max: 3, chance: 0.7 },
+        LootEntry { resource: Resource::Stone, infallible: 0, bonus_max: 1, chance: 0.1 },
+
+    ],
     terrain: Terrain::Plain,
 };
 
+
 const FOREST_TILE_1: Tile = Tile {
-    nodes: &[ResourceNode::Grass, ResourceNode::Tree],
+    loots: &[
+        LootEntry { resource: Resource::Wood, infallible: 1, bonus_max: 4, chance: 0.18 },
+        LootEntry { resource: Resource::Stone, infallible: 0, bonus_max: 1, chance: 0.1 },
+    ],
     terrain: Terrain::Forest,
 };
 
 // tile rare : clairière à champignons, tirée avec une faible probabilité (voir pool())
 const FOREST_TILE_MUSHROOM: Tile = Tile {
-    nodes: &[ResourceNode::Grass, ResourceNode::Mushroom],
+    loots: &[
+        LootEntry { resource: Resource::Wood, infallible: 1, bonus_max: 4, chance: 0.18 },
+        LootEntry { resource: Resource::Mushroom, infallible: 0, bonus_max: 3, chance: 0.3 },
+    ],
     terrain: Terrain::Forest,
 };
 
 const FOREST_TILE_2: Tile = Tile {
-    nodes: &[ResourceNode::Grass, ResourceNode::Tree, ResourceNode::Bush],
+    loots: &[
+        LootEntry { resource: Resource::Wood, infallible: 1, bonus_max: 4, chance: 0.18 },
+        LootEntry { resource: Resource::Berry, infallible: 0, bonus_max: 5, chance: 0.15 },
+    ],
     terrain: Terrain::Forest,
 };
 
@@ -49,33 +77,42 @@ const FOREST_TILE_2: Tile = Tile {
 // distinction qui n'a plus de sens sans géométrie de clic — voir pool() pour la
 // pondération conservée via une double référence à cette même tile.
 const CLIFF_TILE_ROCK: Tile = Tile {
-    nodes: &[ResourceNode::Rock],
+    loots: &[
+        LootEntry { resource: Resource::Stone, infallible: 1, bonus_max: 5, chance: 0.3 },
+        LootEntry { resource: Resource::IronOre, infallible: 0, bonus_max: 3, chance: 0.25 },
+    ],
     terrain: Terrain::Cliff,
 };
 
 const CLIFF_TILE_IRON: Tile = Tile {
-    nodes: &[ResourceNode::Rock, ResourceNode::OreVein],
+    loots: &[
+        LootEntry { resource: Resource::Stone, infallible: 0, bonus_max: 3, chance: 0.2 },
+        LootEntry { resource: Resource::IronOre, infallible: 1, bonus_max: 4, chance: 0.25 },
+    ],
     terrain: Terrain::Cliff,
 };
 
 // tile rare : filon de cristal, tirée avec une faible probabilité (voir pool())
 const CLIFF_TILE_CRYSTAL: Tile = Tile {
-    nodes: &[ResourceNode::Rock, ResourceNode::Crystal],
+    loots: &[
+        LootEntry { resource: Resource::Stone, infallible: 1, bonus_max: 3, chance: 0.1 },
+        LootEntry { resource: Resource::Crystal, infallible: 1, bonus_max: 4, chance: 0.12 },
+    ],
     terrain: Terrain::Cliff,
 };
 
 const WATER_TILE: Tile = Tile {
-    nodes: &[],
+    loots: &[],
     terrain: Terrain::Water,
 };
 
 const CAMP_TILE: Tile = Tile {
-    nodes: &[],
+    loots: &[],
     terrain: Terrain::Camp,
 };
 
 const VOID_TILE: Tile = Tile {
-    nodes: &[],
+    loots: &[],
     terrain: Terrain::Void,
 };
 
@@ -115,6 +152,6 @@ impl Tile {
     /// combiner plusieurs `ResourceNode`, ex. Grass + Rock) en une seule liste consommée
     /// par `Looting::generate`.
     pub fn loot_pool(&self) -> Vec<LootEntry> {
-        self.nodes.iter().flat_map(|node| node.loot().iter().copied()).collect()
+        self.loots.iter().map(|node| node.clone()).collect()
     }
 }

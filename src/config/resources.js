@@ -4,11 +4,12 @@ export const RESOURCE_ICONS = {
   Grass: "🌿",
   Wood: "🪵",
   Stone: "🪨",
-  Plank: "🪵",
+  Plank: "/assets/plank.png",
   Charcoal: "⚫",
   Berry: "🍓",
   IronOre: "🔩",
   Crystal: "💎",
   Mushroom: "🍄",
   Flower: "🌸",
+  Fiber: "/assets/fiber.png"
 };

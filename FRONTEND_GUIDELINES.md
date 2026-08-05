@@ -217,8 +217,6 @@ Un composant `ui/` ne remonte jamais vers un provider ou une page, et deux domai
 
 **`src/utils/animation.js` a été scindé, pas seulement déplacé** (2026-07-28). La seule fonction réellement pure — `easeOutCubic` — ne touche jamais le DOM ; elle est dans `utils/easing.js`. Tout ce qui orchestre `framer-motion`/le DOM (`shake`, les générateurs de gradient CSS `radialGlow`/`progressGradient`) est dans `animations/`, qui est impur par nature et assumé comme tel (détail complet en §4.6). Les autres exports de l'ancien fichier (`clamp`, `progress`, `easeInOutQuad`, `wait`, `playDumperAnimation`, `pulse`) étaient du code mort et ont été supprimés (§6).
 
-**`src/assets/react.svg` a été supprimé** — vestige du scaffold Vite, jamais importé.
-
 **L'ordre de montage des providers est désormais protégé par le code, pas seulement par convention.** `App.jsx` montait `MapProvider > PlayerProvider > InventoryProvider` à cause d'une dépendance interne non documentée : `PlayerProvider` appelle `useMap()`, donc doit être monté sous `MapProvider`, sans qu'aucun commentaire du code ne le dise. `providers/AppProviders.jsx` compose désormais les trois dans le bon ordre et documente en JSDoc pourquoi cet ordre est obligatoire ; `App.jsx` n'importe plus que `<AppProviders>` (§6, résolu).
 
 ---
@@ -393,7 +391,7 @@ Cette liste documente ce qui a été identifié pour que personne (humain ou IA)
 - **En-têtes de section incohérents** (7 occurrences, dont la dérive `text-blue-300`/`tracking-[0.2em]` de `Plain.jsx`) — unifiés via `ui/SectionHeader.jsx`.
 - **3 boutons pilule non alignés** — unifiés via `PILL_BUTTON_BASE` (`ui/Button/styles.js`).
 - **`#1e2535` redéclaré en dur** sur `MainLayout.jsx`/`CampLayout.jsx` — retiré, porté uniquement par `body`.
-- **Code mort** — `src/utils/pathfinding.js`, `src/assets/react.svg`, et 6 des 9 exports de l'ex `utils/animation.js` (`playDumperAnimation`, `pulse`, `easeInOutQuad`, `clamp`, `progress`, `wait`) supprimés ; seuls `shake`, `easeOutCubic`, `radialGlow`, `progressGradient` ont survécu, répartis entre `animations/` et `utils/easing.js`.
+- **Code mort** — `src/utils/pathfinding.js`, `public/assets/react.svg`, et 6 des 9 exports de l'ex `utils/animation.js` (`playDumperAnimation`, `pulse`, `easeInOutQuad`, `clamp`, `progress`, `wait`) supprimés ; seuls `shake`, `easeOutCubic`, `radialGlow`, `progressGradient` ont survécu, répartis entre `animations/` et `utils/easing.js`.
 - **`console.log` oubliés** — retirés (`TableScroll.jsx`, `PlayerProvider.jsx`, `Home.jsx`, dont l'`useEffect` associé qui n'avait plus d'autre contenu).
 - **Routes non déclarées de `CampLayout.jsx`** — le lien "Craft" (`/craft`, doublon cassé d'"Imprimerie") a été retiré ; le lien "Four" (`/camp/oven`) pointe désormais vers une page stub `pages/Oven.jsx` (même pattern que `Settings.jsx`), route ajoutée dans `App.jsx`.
 - **`HexTile.jsx` non mémoïsé** — enveloppé dans `React.memo`.

@@ -1,8 +1,4 @@
-import { RESOURCE_ICONS } from "../../../config/resources.js";
-
-function ResourceIcon({ resource, className = "text-xl" }) {
-  return <span className={className}>{RESOURCE_ICONS[resource] ?? "❔"}</span>;
-}
+import ResourceIcon from "../ResourceIcon.jsx";
 
 /**
  * Slot d'affichage d'une ressource à l'unité : icône + quantité, ou

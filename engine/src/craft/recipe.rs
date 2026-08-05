@@ -21,6 +21,13 @@ const PLANK: RecipeDefinition = RecipeDefinition {
     label: "Planche",
 };
 
+const FIBER: RecipeDefinition = RecipeDefinition {
+    inputs: &[(Resource::Grass, 5)],
+    outputs: &[(Resource::Fiber, 1)],
+    duration: 0,
+    label: "Fibre",
+};
+
 const CHARCOAL: RecipeDefinition = RecipeDefinition {
     inputs: &[(Resource::Wood, 3)],
     outputs: &[(Resource::Charcoal, 1)],
@@ -47,12 +54,13 @@ impl RecipeDefinition {
     }
 }
 
-const ALL: &[Recipe] = &[Recipe::Plank, Recipe::Charcoal];
+const ALL: &[Recipe] = &[Recipe::Plank, Recipe::Charcoal, Recipe::Fiber];
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub enum Recipe {
     Plank,
     Charcoal,
+    Fiber,
 }
 
 impl Recipe {
@@ -60,6 +68,7 @@ impl Recipe {
         match self {
             Recipe::Plank => &PLANK,
             Recipe::Charcoal => &CHARCOAL,
+            Recipe::Fiber => &FIBER,
         }
     }
 

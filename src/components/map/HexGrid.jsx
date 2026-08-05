@@ -8,7 +8,7 @@ import { HEX_SIZE } from '../../config/mapConfig.js';
 
 const ZOOM_MIN = 0.6;
 const ZOOM_MAX = 1.8;
-const ZOOM_STEP = 0.15;
+const ZOOM_STEP = 0.14;
 const PAN_STEP = HEX_SIZE * 1.5;
 // Un déplacement de pointeur en-deçà de ce seuil (en px écran) est encore
 // considéré comme un clic, pas un glissement de la vue.
@@ -32,7 +32,7 @@ const HexGrid = ({ className = '' }) => {
   const { map, terrain: data_terrain, cell, viewBox, toPixel } = useMap();
   const { position, moveTo, isMoving } = usePlayer();
   const [hovered, setHovered] = useState(null);
-  const [zoom, setZoom] = useState(1);
+  const [zoom, setZoom] = useState(1.35);
   const [isPanning, setIsPanning] = useState(false);
 
   const handleWheel = useCallback((event) => {
