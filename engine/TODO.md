@@ -14,25 +14,6 @@
 
 ## 🔴 Bugs — priorité immédiate (corruption de données / tests rouges)
 
-- [ ] **Collision de fichier de sauvegarde `world` ↔ `progression`.**
-  `world/persistence.rs:20` et `world/persistence.rs:36` construisent le chemin de
-  sauvegarde de la carte avec `PROGRESSION_SAVE_NAME` (importé de
-  `progression::persistence`) au lieu de la constante locale `WOLD_SAVE_NAME` (elle-même
-  mal orthographiée, cf. point suivant). Résultat concret : `world::persistence::save`
-  et `progression::persistence::save` écrivent **le même fichier** `progression.json`
-  dans le dossier de sauvegarde (`engine.rs:114` et `engine.rs:149` appellent les deux
-  avec le même `save_path`) — chaque sauvegarde de la carte écrase la progression du
-  joueur, et vice-versa. `saver::reset` pour le monde (`engine.rs:140`) cible lui
-  correctement `WOLD_SAVE_NAME` (donc `world.json`, un fichier qui n'est en réalité
-  jamais créé) : le reset du monde ne nettoie pas le fichier réellement utilisé. C'est
-  très probablement le bug visé par le commit `2c2b03e` ("gestion de progession a
-  revoir"). Fix : remplacer les deux occurrences de `PROGRESSION_SAVE_NAME` par
-  `WOLD_SAVE_NAME` dans `world/persistence.rs`.
-
-- [ ] **Typo `WOLD_SAVE_NAME` → `WORLD_SAVE_NAME`** (`world/persistence.rs:9`). Renommer
-  en même temps que le fix ci-dessus (un seul point d'import à mettre à jour,
-  `engine.rs:21`).
-
 - [ ] **`TransferInventorySystem::execute` inverse le cas "transfert complet" et le cas
   "débordement"** (`inventory/system.rs:26-30`), documenté en détail en
   `ARCHITECTURE_GUIDELINES.md` §4.5 et annexe. `Inventory::excludes` retourne `None`

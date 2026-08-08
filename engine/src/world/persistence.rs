@@ -1,8 +1,5 @@
 use std::path::PathBuf;
 use serde::{Deserialize, Serialize};
-use crate::progression::persistence::PROGRESSION_SAVE_NAME;
-use crate::progression::state::ProgressionState;
-use crate::progression::unlockable::Unlockable;
 use crate::saver;
 use crate::world::map::Map;
 
@@ -17,7 +14,7 @@ struct WorldSave {
 /// absent ou corrompu => état vierge, ne bloque jamais le démarrage du
 /// moteur pour une sauvegarde illisible.
 pub fn load(path: &PathBuf) -> Map {
-    let save: WorldSave = saver::load(&path.join(PROGRESSION_SAVE_NAME));
+    let save: WorldSave = saver::load(&path.join(WOLD_SAVE_NAME));
 
     save.map
 }
@@ -33,5 +30,5 @@ pub fn save(path: &PathBuf, state: &Map) -> std::io::Result<()> {
         }
     };
 
-    saver::save(&path.join(PROGRESSION_SAVE_NAME), save)
+    saver::save(&path.join(WOLD_SAVE_NAME), save)
 }
