@@ -1,9 +1,13 @@
 import { Outlet } from "react-router-dom";
 import NavBar from "../ui/NavBar.jsx";
 import { useIsCamp } from "../../hooks/useIsCamp.js";
+import { useProgression } from "../../providers/ProgressionProvider.jsx";
+import { UNLOCKABLE } from "../../config/progression.js";
 
 function CampLayout() {
   const isCamp = useIsCamp();
+  const { isUnlocked } = useProgression();
+  const ovenUnlocked = isUnlocked(UNLOCKABLE.OVEN);
 
   const links = [
     {
@@ -13,7 +17,12 @@ function CampLayout() {
     },
     {
       to: "/camp/oven",
-      label: "Four",
+      label: ovenUnlocked ? "Four" : "🔒 Four",
+      className: `font-medium transition-colors ${ovenUnlocked ? "text-slate-400 hover:text-emerald-400" : "text-slate-600 hover:text-slate-500"}`,
+    },
+    {
+      to: "/camp/quest",
+      label: "Quêtes",
       className: "font-medium text-slate-400 hover:text-emerald-400 transition-colors",
     },
   ];

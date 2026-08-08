@@ -3,6 +3,7 @@ use crate::world::resource_node::ResourceNode;
 use crate::world::terrain::Terrain;
 
 pub struct Tile {
+    pub name: &'static str,
     pub loots: &'static [LootEntry],
     pub terrain: Terrain,
 }
@@ -10,6 +11,7 @@ pub struct Tile {
 
 /////////////  PLAIN  ///////////////////
 const PLAIN_TILE_1: Tile = Tile {
+    name: "plain_base",
     loots: &[
         LootEntry { resource: Resource::Grass, infallible: 1, bonus_max: 5, chance: 0.2 },
         LootEntry { resource: Resource::Wood, infallible: 0, bonus_max: 2, chance: 0.2 },
@@ -18,6 +20,7 @@ const PLAIN_TILE_1: Tile = Tile {
 };
 
 const PLAIN_TILE_2: Tile = Tile {
+    name: "plain_rocked",
     loots: &[
         LootEntry { resource: Resource::Grass, infallible: 1, bonus_max: 4, chance: 0.27 },
         LootEntry { resource: Resource::Stone, infallible: 0, bonus_max: 1, chance: 0.6 },
@@ -27,6 +30,7 @@ const PLAIN_TILE_2: Tile = Tile {
 };
 
 const PLAIN_TILE_3: Tile = Tile {
+    name: "plain_berry",
     loots: &[
         LootEntry { resource: Resource::Grass, infallible: 1, bonus_max: 6, chance: 0.18 },
         LootEntry { resource: Resource::Berry, infallible: 0, bonus_max: 3, chance: 0.8 },
@@ -37,6 +41,7 @@ const PLAIN_TILE_3: Tile = Tile {
 
 // tile rare : parterre de fleurs, tirée avec une faible probabilité (voir pool())
 const PLAIN_TILE_FLOWER: Tile = Tile {
+    name: "plain_flower",
     loots: &[
         LootEntry { resource: Resource::Grass, infallible: 1, bonus_max: 8, chance: 0.18 },
         LootEntry { resource: Resource::Flower, infallible: 0, bonus_max: 3, chance: 0.7 },
@@ -48,6 +53,7 @@ const PLAIN_TILE_FLOWER: Tile = Tile {
 
 
 const FOREST_TILE_1: Tile = Tile {
+    name: "forest_base",
     loots: &[
         LootEntry { resource: Resource::Wood, infallible: 1, bonus_max: 4, chance: 0.18 },
         LootEntry { resource: Resource::Stone, infallible: 0, bonus_max: 1, chance: 0.1 },
@@ -57,6 +63,7 @@ const FOREST_TILE_1: Tile = Tile {
 
 // tile rare : clairière à champignons, tirée avec une faible probabilité (voir pool())
 const FOREST_TILE_MUSHROOM: Tile = Tile {
+    name: "forest_mushroomed",
     loots: &[
         LootEntry { resource: Resource::Wood, infallible: 1, bonus_max: 4, chance: 0.18 },
         LootEntry { resource: Resource::Mushroom, infallible: 0, bonus_max: 3, chance: 0.3 },
@@ -65,6 +72,7 @@ const FOREST_TILE_MUSHROOM: Tile = Tile {
 };
 
 const FOREST_TILE_2: Tile = Tile {
+    name: "forest_berry",
     loots: &[
         LootEntry { resource: Resource::Wood, infallible: 1, bonus_max: 4, chance: 0.18 },
         LootEntry { resource: Resource::Berry, infallible: 0, bonus_max: 5, chance: 0.15 },
@@ -77,6 +85,7 @@ const FOREST_TILE_2: Tile = Tile {
 // distinction qui n'a plus de sens sans géométrie de clic — voir pool() pour la
 // pondération conservée via une double référence à cette même tile.
 const CLIFF_TILE_ROCK: Tile = Tile {
+    name: "cliff_base",
     loots: &[
         LootEntry { resource: Resource::Stone, infallible: 1, bonus_max: 5, chance: 0.3 },
         LootEntry { resource: Resource::IronOre, infallible: 0, bonus_max: 3, chance: 0.25 },
@@ -85,6 +94,7 @@ const CLIFF_TILE_ROCK: Tile = Tile {
 };
 
 const CLIFF_TILE_IRON: Tile = Tile {
+    name: "cliff_rich",
     loots: &[
         LootEntry { resource: Resource::Stone, infallible: 0, bonus_max: 3, chance: 0.2 },
         LootEntry { resource: Resource::IronOre, infallible: 1, bonus_max: 4, chance: 0.25 },
@@ -94,6 +104,7 @@ const CLIFF_TILE_IRON: Tile = Tile {
 
 // tile rare : filon de cristal, tirée avec une faible probabilité (voir pool())
 const CLIFF_TILE_CRYSTAL: Tile = Tile {
+    name: "cliff_crystal",
     loots: &[
         LootEntry { resource: Resource::Stone, infallible: 1, bonus_max: 3, chance: 0.1 },
         LootEntry { resource: Resource::Crystal, infallible: 1, bonus_max: 4, chance: 0.12 },
@@ -102,19 +113,23 @@ const CLIFF_TILE_CRYSTAL: Tile = Tile {
 };
 
 const WATER_TILE: Tile = Tile {
+    name: "water_base",
     loots: &[],
     terrain: Terrain::Water,
 };
 
 const CAMP_TILE: Tile = Tile {
+    name: "camp_base",
     loots: &[],
     terrain: Terrain::Camp,
 };
 
 const VOID_TILE: Tile = Tile {
+    name: "_void",
     loots: &[],
     terrain: Terrain::Void,
 };
+
 
 impl Tile {
     /// Toutes les variantes de Tile possibles pour un type de Terrain donné.
@@ -146,6 +161,32 @@ impl Tile {
                 &CLIFF_TILE_CRYSTAL,
             ],
         }
+    }
+
+    pub fn all() -> &'static [&'static Tile] {
+        &[
+            &PLAIN_TILE_1, &PLAIN_TILE_2, &PLAIN_TILE_3,
+            &PLAIN_TILE_1, &PLAIN_TILE_2, &PLAIN_TILE_3,
+            &PLAIN_TILE_FLOWER,
+            &FOREST_TILE_1, &FOREST_TILE_2,
+            &FOREST_TILE_1, &FOREST_TILE_2,
+            &FOREST_TILE_1, &FOREST_TILE_2,
+            &FOREST_TILE_MUSHROOM,
+            &WATER_TILE,
+            &CLIFF_TILE_ROCK, &CLIFF_TILE_ROCK, &CLIFF_TILE_ROCK, &CLIFF_TILE_ROCK,
+            &CLIFF_TILE_IRON, &CLIFF_TILE_IRON,
+            &CLIFF_TILE_CRYSTAL,
+            &VOID_TILE,
+            &CAMP_TILE,
+        ]
+    }
+
+    pub(crate) fn find_all(name: &str) -> Option<&'static Tile> {
+        Tile::all().iter().copied().find(|t| t.name == name)
+    }
+
+    fn find(terrain: Terrain, name: &str) -> Option<&'static Tile> {
+        Tile::pool(terrain).iter().copied().find(|t| t.name == name)
     }
 
     /// Concatène les tables de loot de tous les gisements de cette tile (une tile peut

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { craft, listenEngineEvents } from "../api/engine.js";
+import { useTimedFeedback } from "./useTimedFeedback.js";
 
 export const CAULDRON_ZONE = "cauldron";
 
@@ -30,7 +31,7 @@ export function useCraft(recipes) {
   const [items, setItems] = useState([]);
   const [activeId, setActiveId] = useState(null);
   const [crafting, setCrafting] = useState(false);
-  const [craftError, setCraftError] = useState(null);
+  const [craftError, setCraftError] = useTimedFeedback(1200);
   const [topId, setTopId] = useState(null);
   const canvasRef = useRef(null);
   const refs = useRef({});
@@ -45,7 +46,6 @@ export function useCraft(recipes) {
       CraftFailed: ({ recipe: label }) => {
         setCrafting(false);
         setCraftError(label);
-        setTimeout(() => setCraftError(null), 1200);
       },
     });
     return () => { unlisten.then((fn) => fn()); };

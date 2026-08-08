@@ -4,6 +4,7 @@ use serde::Deserialize;
 use crate::inventory::command::TransferInventoryPayload;
 use crate::craft::command::CraftPayload;
 use crate::position::Position;
+use crate::progression::command::PurchasePayload;
 use crate::resource::Resource;
 
 /// Marqueur : nom du point d'entrée Tauri unique (`invoke(NAME, {command})`).
@@ -36,6 +37,9 @@ pub enum Command {
     Craft {
         payload: CraftPayload,
     },
+    Purchase {
+        payload: PurchasePayload,
+    },
 
     /// Getter
     GetMap,
@@ -45,6 +49,8 @@ pub enum Command {
     GetInventory {
         name: String,
     },
+    GetProgression,
+    ResetSave,
 }
 
 

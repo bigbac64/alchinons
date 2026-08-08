@@ -5,6 +5,7 @@ use crate::world::view::{MapView, TerrainView};
 use crate::inventory::view::InventoryView;
 use crate::craft::view::RecipeView;
 use crate::gather::view::GatherOptionView;
+use crate::progression::view::ProgressionView;
 
 #[derive(Serialize)]
 #[serde(tag = "type", content = "data")]
@@ -15,6 +16,7 @@ pub enum CommandOutput {
     Recipes(RecipeView),
     Player(Position),
     GatherOptions(Vec<GatherOptionView>),
+    Progression(ProgressionView),
     None,
 }
 

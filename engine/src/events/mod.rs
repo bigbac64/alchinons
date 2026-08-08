@@ -2,6 +2,8 @@ use serde::Serialize;
 use serde_json::{json, Value};
 use crate::position::Position;
 use crate::inventory::view::InventoryView;
+use crate::progression::view::ProgressionView;
+use crate::world::view::MapView;
 
 pub mod inventory;
 
@@ -12,6 +14,9 @@ pub enum Event {
     MovePath {path: Vec<Position>},
     MoveFailed,
     CraftFailed { recipe: String },
+    ProgressionUpdated { changes: ProgressionView },
+    UnlockFailed { unlockable: String },
+    MapUpdated { changes: MapView },
 }
 
 /// Marqueur : un type d'event diffusable au frontend via un canal Tauri unique.
@@ -29,6 +34,9 @@ impl Event {
             Event::MovePath {path: _} => "move_path",
             Event::MoveFailed => "move_failed",
             Event::CraftFailed {recipe: _} => "craft_failed",
+            Event::ProgressionUpdated {changes: _} => "progression_updated",
+            Event::UnlockFailed {unlockable: _} => "unlock_failed",
+            Event::MapUpdated {changes: _} => "map_updated",
         }
     }
 
@@ -41,6 +49,9 @@ impl Event {
             Event::MovePath {path} => json!(path),
             Event::MoveFailed => json!({"error": "Pathfinding failed"}),
             Event::CraftFailed {recipe} => json!({"recipe": recipe, "error": "Ressources insuffisantes"}),
+            Event::ProgressionUpdated {changes} => json!(changes),
+            Event::UnlockFailed {unlockable} => json!({"unlockable": unlockable, "error": "Ressources insuffisantes"}),
+            Event::MapUpdated {changes} => json!(changes),
         }
     }
 }

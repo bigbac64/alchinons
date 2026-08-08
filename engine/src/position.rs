@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Eq, Ord, PartialEq, PartialOrd, Hash, Copy, Clone, Debug, Serialize, Deserialize)]
+#[derive(Eq, Ord, PartialEq, PartialOrd, Hash, Copy, Clone, Debug, Serialize, Deserialize, Default)]
 pub struct Position {
     pub x: u32,
     pub y: u32,

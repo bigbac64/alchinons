@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use serde::Serialize;
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug, Clone)]
 pub struct MapView {
     pub(crate) map: Vec<Vec<String>>,
     /// Masque de brouillard : `true` = case dévoilée. Même dimensions que `map`.

@@ -9,6 +9,7 @@ import CampLayout from "./components/navigation/CampLayout.jsx";
 import NotFound from "./pages/NotFound.jsx";
 import Craft from "./pages/Craft.jsx";
 import Oven from "./pages/Oven.jsx";
+import Quest from "./pages/Quest.jsx";
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
           <Route path="camp" element={<CampLayout />}>
             <Route index element={<Home />} />
             <Route path="craft" element={<Craft />} />
+            <Route path="quest" element={<Quest />} />
             <Route path="oven" element={<Oven />} />
           </Route>
           <Route path="settings" element={<Settings />} />

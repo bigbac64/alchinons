@@ -12,6 +12,8 @@ pub mod inventory;
 pub mod world;
 pub mod movement;
 pub mod gather;
+pub mod progression;
+pub mod saver;
 
 #[cfg(test)]
 mod tests {

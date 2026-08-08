@@ -1,13 +1,51 @@
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use crate::position::{hex_distance, Position};
+use crate::world::layout::MAP_LAYOUT;
 use crate::world::tile::Tile;
 use crate::world::terrain::Terrain;
 use crate::world::view::MapView;
 
-pub struct Map {
-    map: Vec<Vec<Terrain>>,
-    tiles: Vec<Vec<&'static Tile>>,
-    explored: Vec<Vec<bool>>,
+fn serialize_tiles<S>(tiles: &Vec<Vec<&'static Tile>>,  serializer: S) -> Result<S::Ok, S::Error>
+where S: Serializer {
+    let ids: Vec<Vec<&str>> = tiles
+        .iter()
+        .map(|row| row.iter().map(|t| t.name).collect())
+        .collect();
+    ids.serialize(serializer)
 }
+
+fn deserialize_tiles<'de, D>(deserializer: D) -> Result<Vec<Vec<&'static Tile>>, D::Error>
+where D: Deserializer<'de> {
+    let names: Vec<Vec<String>> = Vec::deserialize(deserializer)?;
+    names.into_iter()
+        .map(|row| {
+            row.into_iter()
+                .map(|name| {
+                    Tile::find_all(&name)
+                        .ok_or_else(|| serde::de::Error::custom(format!("tile inconnu: {name}")))
+                })
+                .collect::<Result<Vec<_>, _>>()
+        })
+        .collect::<Result<Vec<_>, _>>()
+}
+
+
+
+#[derive(Serialize, Deserialize)]
+pub struct Map {
+    pub(crate) map: Vec<Vec<Terrain>>,
+    #[serde(serialize_with = "serialize_tiles", deserialize_with = "deserialize_tiles")]
+    pub(crate) tiles: Vec<Vec<&'static Tile>>,
+    pub(crate) explored: Vec<Vec<bool>>,
+    pub(crate) camp: Option<Position>,
+}
+
+impl Default for Map {
+    fn default() -> Self {
+        Self::from_array(&MAP_LAYOUT)
+    }
+}
+
 
 impl Map {
     pub fn new() -> Self {
@@ -15,6 +53,7 @@ impl Map {
             map: vec![vec![Terrain::Void]],
             tiles: vec![vec![Self::pick_tile(Terrain::Void)]],
             explored: vec![vec![true]],
+            camp: None,
         }
     }
 
@@ -34,16 +73,21 @@ impl Map {
 
         let explored = vec![vec![false; COLS]; ROWS];
 
-        let mut instance = Self { map, tiles, explored };
+        let mut instance = Self { map, tiles, explored, camp: None };
+        instance.camp = instance.find_camp();
 
         // Brouillard initial : seul le camp (et son rayon direct) est visible au
-        // démarrage — le reste se dévoile via `reveal`, dont le déclenchement en
-        // cours de partie (ex. à chaque déplacement) reste à câbler plus tard.
-        if let Some(camp) = instance.find_camp() {
+        // démarrage — le reste se dévoile en cours de partie via `reveal`
+        // (voir `progression::unlockable::Unlockable::ExplorationRadius`).
+        if let Some(camp) = instance.camp {
             instance.reveal(camp, 1);
         }
 
         instance
+    }
+
+    pub fn camp(&self) -> Option<Position> {
+        self.camp
     }
 
     fn find_camp(&self) -> Option<Position> {

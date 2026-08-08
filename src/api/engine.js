@@ -56,3 +56,10 @@ export const getRecipes = () => sendCommand("GetRecipes");
 
 export const craft = (recipe, inventory) =>
   sendCommand({ Craft: { payload: { recipe, inventory } } });
+
+export const getProgression = () => sendCommand("GetProgression");
+
+export const purchase = (unlockable, inventory) =>
+  sendCommand({ Purchase: { payload: { unlockable, inventory } } });
+
+export const reset = () => sendCommand("ResetSave");

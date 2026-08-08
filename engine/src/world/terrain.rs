@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use crate::world::view::{TerrainDefinitionView, TerrainView};
 
 const VOID: TerrainDefinition = TerrainDefinition {
@@ -45,7 +45,7 @@ const CAMP: TerrainDefinition = TerrainDefinition {
 };
 
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Serialize, Deserialize, Copy, Clone, Debug)]
 pub enum Terrain {
     Void,
     Camp,

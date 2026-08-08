@@ -3,6 +3,7 @@ import Vector from '../../utils/vector.js';
 import { useMap } from './MapProvider.jsx';
 import {listen} from "@tauri-apps/api/event";
 import {getPlayer, listenEngineEvents, move} from "../../api/engine.js";
+import { useTimedFeedback } from '../../hooks/useTimedFeedback.js';
 
 const PlayerContext = createContext(null);
 const STEP_DURATION_MS = 220;
@@ -22,19 +23,13 @@ export const PlayerProvider = ({ children }) => {
 
   const [position, setPosition] = useState(null);
   const [isMoving, setIsMoving] = useState(false);
-  const [feedback, setFeedback] = useState(null);
+  const [feedback, setFeedback] = useTimedFeedback(FEEDBACK_DURATION_MS);
 
   useEffect(() => {
     getPlayer().then(({x, y}) => {
       setPosition(new Vector(x, y))
     });
   }, []);
-
-  useEffect(() => {
-    if (!feedback) return undefined;
-    const id = setTimeout(() => setFeedback(null), FEEDBACK_DURATION_MS);
-    return () => clearTimeout(id);
-  }, [feedback]);
 
   const moveTo = useCallback(
     async (target) => {

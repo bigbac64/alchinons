@@ -18,7 +18,8 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![greet, engine])
         .setup(|app| {
-            let app_state = AppState::new();
+            let save_path = app.path().app_data_dir()?;
+            let app_state = AppState::new(save_path);
             let notify = app_state.notify.clone(); // le même Arc que celui déjà dans engine
             app.manage(app_state);
 

@@ -1,3 +1,4 @@
+use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use tokio::sync::Notify;
 use engine::engine::GameEngine;
@@ -8,13 +9,13 @@ pub struct AppState {
 }
 
 impl AppState {
-    pub fn new() -> Self {
+    pub fn new(save_path: PathBuf) -> Self {
         let notify = Arc::new(
             Notify::new()
         );
         Self {
             engine: Mutex::new(
-                GameEngine::new(notify.clone())
+                GameEngine::new(notify.clone(), save_path)
             ),
             notify,
         }

@@ -4,10 +4,16 @@ import MapLegend from "../components/map/MapLegend.jsx";
 import Button from "../components/ui/Button/Button.jsx";
 import Panel from "../components/ui/Panel.jsx";
 import SectionHeader from "../components/ui/SectionHeader.jsx";
+import UnlockCost from "../components/progression/UnlockCost.jsx";
+import { useProgression } from "../providers/ProgressionProvider.jsx";
+import { UNLOCKABLE } from "../config/progression.js";
 import {Link} from "react-router-dom";
 
 function Carte() {
   const { currentTile, feedback } = usePlayer();
+  const { getStatus, purchase, purchasingId, error } = useProgression();
+  const exploration = getStatus(UNLOCKABLE.EXPLORATION_RADIUS);
+
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-8">
@@ -34,6 +40,25 @@ function Carte() {
           )}
 
           <MapLegend />
+
+          {exploration && (
+            <Panel className="p-4">
+              <SectionHeader>Zone explorée</SectionHeader>
+              {exploration.next_cost ? (
+                <div className="mt-3">
+                  <UnlockCost
+                    cost={exploration.next_cost}
+                    label={`Agrandir (palier ${exploration.tier + 1})`}
+                    purchasing={purchasingId === UNLOCKABLE.EXPLORATION_RADIUS}
+                    error={error}
+                    onPurchase={() => purchase(UNLOCKABLE.EXPLORATION_RADIUS)}
+                  />
+                </div>
+              ) : (
+                <p className="mt-2 text-sm text-slate-400">Zone maximale explorée.</p>
+              )}
+            </Panel>
+          )}
 
           <Link to={currentTile?.id === "camp" ? "/camp" : "/exploit"}
                 className={`font-medium hover:text-emerald-400 transition-colors`}
