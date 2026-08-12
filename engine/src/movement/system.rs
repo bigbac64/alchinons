@@ -14,7 +14,7 @@ impl MoveSystem {
     }
     
     pub fn execute(&mut self, destination: Position, states: &mut GameState) -> Vec<Event> {
-        match search(states.player.player.position, destination, &states.map.matrix_cost(), hex_distance) {
+        match search(states.player.player.position, destination, &states.world.map.matrix_cost(), hex_distance) {
             Some(path) => {
                 states.player.player.position = *path.last().unwrap();
                 vec![Event::MovePath { path }]

@@ -16,6 +16,7 @@ pub enum CommandOutput {
     Recipes(RecipeView),
     Player(Position),
     GatherOptions(Vec<GatherOptionView>),
+    ExploitableTile(bool),
     Progression(ProgressionView),
     None,
 }

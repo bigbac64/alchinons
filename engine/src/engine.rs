@@ -19,6 +19,7 @@ use crate::{player, progression, saver, world};
 use crate::player::persistence::PLAYER_SAVE_NAME;
 use crate::progression::persistence::PROGRESSION_SAVE_NAME;
 use crate::world::persistence::WOLD_SAVE_NAME;
+use crate::world::system::TileSystem;
 
 pub struct GameEngine {
     states: GameState,
@@ -39,15 +40,15 @@ impl GameEngine {
 
         states.progression = progression::persistence::load(&save_path);
         states.player = player::persistence::load(&save_path);
-        states.map = world::persistence::load(&save_path);
+        states.world = world::persistence::load(&save_path);
 
         // `Map::explored` n'est pas persisté (seule la progression l'est) : on
         // réapplique l'effet des paliers déjà achetés pour que la carte visible
         // reste cohérente avec la sauvegarde après un redémarrage.
         let exploration_tier = states.progression.tier(Unlockable::ExplorationRadius);
         if let Some(radius) = Unlockable::ExplorationRadius.reveal_radius_at_tier(exploration_tier) {
-            if let Some(camp) = states.map.camp() {
-                states.map.reveal(camp, radius);
+            if let Some(camp) = states.world.map.camp() {
+                states.world.map.reveal(camp, radius);
             }
         }
 
@@ -73,15 +74,23 @@ impl GameEngine {
 
     pub fn execute(&mut self, command: Command) -> CommandOutput{
         let SystemOutcome { output, events } = match command {
+            Command::ExploitablePlayerPosition => {
+                SystemOutcome::output(CommandOutput::ExploitableTile(TileSystem::exploitable_player_position(&mut self.states)))
+            }
+            Command::Exploitable { position } => {
+                println!("{:?}", position);
+                SystemOutcome::output(CommandOutput::ExploitableTile(TileSystem::exploitable(position.x as usize, position.y as usize, &mut self.states)))
+            }
             Command::Gather => {
-                SystemOutcome::output(CommandOutput::GatherOptions(self.gather_system.propose(&mut self.states)))
+                let output = CommandOutput::GatherOptions(self.gather_system.propose(&mut self.states));
+                SystemOutcome::output(output)
             },
             Command::GatherSelect { resource } => {
                 let (options, events) = self.gather_system.select(resource, &mut self.states);
                 SystemOutcome::both(CommandOutput::GatherOptions(options), events)
             },
             Command::GetMap => {
-                SystemOutcome::output(CommandOutput::Map(self.states.map.to_view()))
+                SystemOutcome::output(CommandOutput::Map(self.states.world.map.to_view()))
             },
             Command::GetTerrain => {
                 SystemOutcome::output(CommandOutput::Terrain(Terrain::view()))
@@ -108,10 +117,10 @@ impl GameEngine {
                 let mut events = outcome.events;
 
                 if let Some(UnlockEffect::RevealMap { radius }) = outcome.effect {
-                    if let Some(camp) = self.states.map.camp() {
-                        self.states.map.reveal(camp, radius);
-                        events.push(Event::MapUpdated { changes: self.states.map.to_view() });
-                        if let Err(err) = world::persistence::save(&self.save_path, &self.states.map) {
+                    if let Some(camp) = self.states.world.map.camp() {
+                        self.states.world.map.reveal(camp, radius);
+                        events.push(Event::MapUpdated { changes: self.states.world.map.to_view() });
+                        if let Err(err) = world::persistence::save(&self.save_path, &self.states.world) {
                             eprintln!("progression save failed: {err}");
                         }
                     }
@@ -138,7 +147,7 @@ impl GameEngine {
                 self.states.player = player::persistence::load(&self.save_path);
 
                 saver::reset(&*self.save_path, WOLD_SAVE_NAME);
-                self.states.map = world::persistence::load(&self.save_path);
+                self.states.world = world::persistence::load(&self.save_path);
 
                 SystemOutcome::output(CommandOutput::None)
 
@@ -154,6 +163,14 @@ impl GameEngine {
         if events.iter().any(|event| matches!(event, Event::MovePath { .. })) {
             if let Err(err) = player::persistence::save(&self.save_path, &self.states.player) {
                 eprintln!("player save failed: {err}");
+            }
+        }
+
+        if events.iter().any(|event| matches!(event, Event::InventoryUpdated { .. })) {
+            if TileSystem::exploitable_player_position(&mut self.states){
+                if let Err(err) = world::persistence::save(&self.save_path, &self.states.world) {
+                    eprintln!("world save failed: {err}");
+                }
             }
         }
 

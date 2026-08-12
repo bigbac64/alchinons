@@ -37,6 +37,9 @@ function sendCommand(command) {
 
 export const gather = () => sendCommand("Gather");
 
+export const is_exploitable_player_position = () => sendCommand("ExploitablePlayerPosition");
+export const is_exploitable_at = (position) => sendCommand({ Exploitable: { position } });
+
 export const gatherSelect = (resource) => sendCommand({ GatherSelect: { resource } });
 
 export const move = (position) => sendCommand({ Move: { position } });

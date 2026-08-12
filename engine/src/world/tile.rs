@@ -1,6 +1,6 @@
 use crate::resource::{LootEntry, Resource};
-use crate::world::resource_node::ResourceNode;
 use crate::world::terrain::Terrain;
+
 
 pub struct Tile {
     pub name: &'static str,

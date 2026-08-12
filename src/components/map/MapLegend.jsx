@@ -19,6 +19,44 @@ const MapLegend = () => {
             {t.label}
           </li>
         ))}
+        <li className={"col-span-full"}>
+          <span className="flex items-center gap-1.5">
+            <svg viewBox="-50 -50 100 100" className="w-4 h-4 shrink-0">
+              <defs>
+                <pattern
+                  id="legendHatchPattern"
+                  width="24"
+                  height="24"
+                  patternUnits="userSpaceOnUse"
+                >
+                  <line
+                    x1="0"
+                    y1="24"
+                    x2="24"
+                    y2="0"
+                    stroke="#000000"
+                    strokeWidth="2"
+                    opacity="0.95"
+                  />
+                </pattern>
+              </defs>
+
+              <polygon
+                points="46,0 23,40 -23,40 -46,0 -23,-40 23,-40"
+                fill="#888888"
+                stroke="#555"
+                strokeWidth="3"
+              />
+
+              <polygon
+                points="46,0 23,40 -23,40 -46,0 -23,-40 23,-40"
+                fill="url(#legendHatchPattern)"
+              />
+            </svg>
+            Terrain vidé de ressource
+          </span>
+
+        </li>
       </ul>
     </Panel>
   );

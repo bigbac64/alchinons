@@ -1,33 +1,28 @@
 use std::path::PathBuf;
 use serde::{Deserialize, Serialize};
 use crate::saver;
-use crate::world::map::Map;
+use crate::world::state::WorldState;
 
 pub const WOLD_SAVE_NAME: &'static str = "world.json";
 
 #[derive(Serialize, Deserialize, Default)]
 struct WorldSave {
-    map: Map,
+    world: WorldState,
 }
 
 /// Charge l'état de progression depuis le disque. Fail-soft : fichier
 /// absent ou corrompu => état vierge, ne bloque jamais le démarrage du
 /// moteur pour une sauvegarde illisible.
-pub fn load(path: &PathBuf) -> Map {
+pub fn load(path: &PathBuf) -> WorldState {
     let save: WorldSave = saver::load(&path.join(WOLD_SAVE_NAME));
 
-    save.map
+    save.world
 }
 
 /// Écrase le fichier de sauvegarde avec l'état courant (paliers à 0 omis).
-pub fn save(path: &PathBuf, state: &Map) -> std::io::Result<()> {
+pub fn save(path: &PathBuf, state: &WorldState) -> std::io::Result<()> {
     let save = &WorldSave {
-        map: Map {
-            map: state.map.clone(),
-            tiles: state.tiles.clone(),
-            explored: state.explored.clone(),
-            camp: state.camp()
-        }
+        world: state.clone()
     };
 
     saver::save(&path.join(WOLD_SAVE_NAME), save)

@@ -14,6 +14,7 @@ pub mod movement;
 pub mod gather;
 pub mod progression;
 pub mod saver;
+pub mod utils;
 
 #[cfg(test)]
 mod tests {

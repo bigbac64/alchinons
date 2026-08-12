@@ -1,5 +1,6 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import Vector from '../../utils/vector.js';
+import {is_exploitable_at} from "../../api/engine.js";
 
 /**
  * HexTile - un hexagone de la carte.
@@ -14,11 +15,26 @@ import Vector from '../../utils/vector.js';
  * @param {(at: Vector | null) => void} onHoverChange
  */
 const HexTile = ({ at, position, cell, walkable, color, explored, isHovered, isCurrent, onClick, onHoverChange }) => {
+  const [exploitable, setExploitable] = useState(true)
   const points = cell.points(new Vector(0, 0)).join(' ');
   const canWalk = walkable && explored;
+  const hatchPatternId = `hex-hatch-${at.x}-${at.y}`;
+
+  useEffect(() => {
+    is_exploitable_at(at).then(setExploitable)
+  }, []);
+
+  console.log(points)
 
   return (
     <g transform={`translate(${position.x}, ${position.y})`}>
+      {!exploitable && (
+        <defs>
+          <pattern id={hatchPatternId} width="24" height="24" patternUnits="userSpaceOnUse">
+            <line x1="0" y1="24" x2="24" y2="0" stroke="#444444" strokeWidth="2.5" opacity="0.85"/>
+          </pattern>
+        </defs>
+      )}
       <polygon
         points={points}
         fill={color}
@@ -35,6 +51,12 @@ const HexTile = ({ at, position, cell, walkable, color, explored, isHovered, isC
       />
       {!explored && (
         <polygon points={points} fill="#0a0e18" opacity={0.94} className="pointer-events-none" />
+      )}
+      {!exploitable && (
+        <>
+          <polygon points={points} fill="#020617" opacity={0.02} className="pointer-events-none" />
+          <polygon points={points} fill={`url(#${hatchPatternId})`} className="pointer-events-none" />
+        </>
       )}
     </g>
   );

@@ -31,7 +31,7 @@ where D: Deserializer<'de> {
 
 
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Map {
     pub(crate) map: Vec<Vec<Terrain>>,
     #[serde(serialize_with = "serialize_tiles", deserialize_with = "deserialize_tiles")]
@@ -148,6 +148,15 @@ impl Map {
                     .collect()).
                 collect(),
             explored: self.explored.clone(),
+        }
+    }
+
+    pub(crate) fn clone(&self) -> Map {
+        Map {
+            map: self.map.clone(),
+            tiles: self.tiles.clone(),
+            explored: self.explored.clone(),
+            camp: self.camp()
         }
     }
 }

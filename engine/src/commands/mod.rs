@@ -18,13 +18,11 @@ pub trait EngineCommand {
 
 #[derive(Deserialize)]
 pub enum Command {
-    /// Tire les ressources disponibles sur la tile courante du joueur et les propose
-    /// à la sélection — voir `gather::system::GatherSystem::propose`. Ne modifie pas
-    /// l'inventaire : c'est `GatherSelect` qui valide un choix.
+    ExploitablePlayerPosition,
+    Exploitable {
+        position: Position
+    },
     Gather,
-    /// Valide le choix du joueur parmi la dernière offre de `Gather`, l'ajoute à son
-    /// inventaire si elle en faisait partie, puis reformule immédiatement une nouvelle
-    /// proposition — voir `gather::system::GatherSystem::select`.
     GatherSelect {
         resource: Resource,
     },

@@ -140,7 +140,7 @@ export default function Tile({
               )
             }) : (
               <p className="col-span-full py-6 text-center text-sm italic text-slate-500">
-                Rien à récolter ici pour l'instant.
+                Rien à récolter ici, la zone a été épuisé.
               </p>
             )}
           </div>

@@ -4,6 +4,7 @@ use crate::state::GameState;
 use crate::gather::utils::loot::Looting;
 use crate::gather::view::GatherOptionView;
 use crate::events::Event;
+use crate::world::system::TileSystem;
 
 pub struct GatherSystem {}
 
@@ -14,11 +15,16 @@ impl GatherSystem {
     /// à la sélection (voir `GatherState::propose`) — rien n'est ajouté à l'inventaire
     /// tant que `select` n'a pas été appelé avec l'une des ressources proposées.
     pub fn propose(&self, states: &mut GameState) -> Vec<GatherOptionView> {
-        let loot = states.map.get_tile(states.player.player.position)
+        let loot = states.world.map.get_tile(states.player.player.position)
             .map(|tile| tile.loot_pool())
             .unwrap_or_default();
 
-        let options = Looting::generate(&loot);
+        let options = if TileSystem::exploitable_player_position(states) {
+                Looting::generate(&loot)
+            } else {
+                HashMap::new()
+            };
+
         states.gather.propose(options.clone());
 
         Self::to_view(options)
@@ -31,6 +37,7 @@ impl GatherSystem {
         let events = match states.gather.resolve(resource) {
             Some(amount) => {
                 states.inventory.player.add(resource, amount);
+                TileSystem::exploit_player_position(states); // TODO si exploitable is false donc options de gather = 0 coté front dire est ya plus c'est a sec
                 vec![Event::InventoryUpdated { changes: states.inventory.player.to_view() }]
             },
             None => vec![],
