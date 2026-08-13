@@ -2,9 +2,9 @@ use crate::events::Event;
 use crate::progression::unlockable::{Unlockable, UnlockEffect};
 use crate::state::GameState;
 
-/// `effect` est une donnée pure à interpréter par l'appelant (`engine.rs`,
-/// seul point connaissant tous les domaines) — `ProgressionSystem` ne mute
-/// jamais `states.map` directement.
+/// `effect` est une donnée pure à interpréter par l'appelant (`progression::command`,
+/// seul point qui a accès à `states.world` en plus de `states.progression`) —
+/// cette fonction ne mute jamais `states.world` directement.
 pub struct PurchaseOutcome {
     pub events: Vec<Event>,
     pub effect: Option<UnlockEffect>,
@@ -19,40 +19,34 @@ impl PurchaseOutcome {
     }
 }
 
-pub struct ProgressionSystem {}
+pub fn purchase(unlockable: Unlockable, inventory_name: String, states: &mut GameState) -> PurchaseOutcome {
+    let current_tier = states.progression.tier(unlockable);
 
-impl ProgressionSystem {
-    pub fn new() -> Self { Self {} }
+    if unlockable.is_maxed(current_tier) {
+        return PurchaseOutcome::failed(unlockable);
+    }
 
-    pub fn purchase(&self, unlockable: Unlockable, inventory_name: String, states: &mut GameState) -> PurchaseOutcome {
-        let current_tier = states.progression.tier(unlockable);
+    let next_tier = current_tier + 1;
+    let cost = unlockable.cost_at_tier(next_tier);
 
-        if unlockable.is_maxed(current_tier) {
-            return PurchaseOutcome::failed(unlockable);
-        }
+    let Some(inventory) = states.inventory.get_by_name_mut(inventory_name.as_str()) else {
+        return PurchaseOutcome::failed(unlockable);
+    };
 
-        let next_tier = current_tier + 1;
-        let cost = unlockable.cost_at_tier(next_tier);
+    if !inventory.has_all(&cost) {
+        return PurchaseOutcome::failed(unlockable);
+    }
 
-        let Some(inventory) = states.inventory.get_by_name_mut(inventory_name.as_str()) else {
-            return PurchaseOutcome::failed(unlockable);
-        };
+    inventory.excludes(cost);
+    let inventory_changes = inventory.to_view();
+    states.progression.set_tier(unlockable, next_tier);
 
-        if !inventory.has_all(&cost) {
-            return PurchaseOutcome::failed(unlockable);
-        }
-
-        inventory.excludes(cost);
-        let inventory_changes = inventory.to_view();
-        states.progression.set_tier(unlockable, next_tier);
-
-        PurchaseOutcome {
-            events: vec![
-                Event::InventoryUpdated { changes: inventory_changes },
-                Event::ProgressionUpdated { changes: states.progression.to_view() },
-            ],
-            effect: unlockable.effect_at_tier(next_tier),
-        }
+    PurchaseOutcome {
+        events: vec![
+            Event::InventoryUpdated { changes: inventory_changes },
+            Event::ProgressionUpdated { changes: states.progression.to_view() },
+        ],
+        effect: unlockable.effect_at_tier(next_tier),
     }
 }
 
@@ -66,9 +60,8 @@ mod tests {
         let mut states = GameState::new();
         states.inventory.player.add(Resource::Stone, 20);
         states.inventory.player.add(Resource::Wood, 10);
-        let system = ProgressionSystem::new();
 
-        let outcome = system.purchase(Unlockable::Oven, "player".to_string(), &mut states);
+        let outcome = purchase(Unlockable::Oven, "player".to_string(), &mut states);
 
         assert!(matches!(outcome.events.as_slice(), [Event::InventoryUpdated { .. }, Event::ProgressionUpdated { .. }]));
         assert!(outcome.effect.is_none());
@@ -78,9 +71,8 @@ mod tests {
     #[test]
     fn purchase_fails_without_enough_resources() {
         let mut states = GameState::new();
-        let system = ProgressionSystem::new();
 
-        let outcome = system.purchase(Unlockable::Oven, "player".to_string(), &mut states);
+        let outcome = purchase(Unlockable::Oven, "player".to_string(), &mut states);
 
         assert!(matches!(outcome.events.as_slice(), [Event::UnlockFailed { .. }]));
         assert_eq!(states.progression.tier(Unlockable::Oven), 0);
@@ -91,10 +83,9 @@ mod tests {
         let mut states = GameState::new();
         states.inventory.player.add(Resource::Stone, 40);
         states.inventory.player.add(Resource::Wood, 20);
-        let system = ProgressionSystem::new();
 
-        system.purchase(Unlockable::Oven, "player".to_string(), &mut states);
-        let outcome = system.purchase(Unlockable::Oven, "player".to_string(), &mut states);
+        purchase(Unlockable::Oven, "player".to_string(), &mut states);
+        let outcome = purchase(Unlockable::Oven, "player".to_string(), &mut states);
 
         assert!(matches!(outcome.events.as_slice(), [Event::UnlockFailed { .. }]));
         assert_eq!(states.progression.tier(Unlockable::Oven), 1);
@@ -105,9 +96,8 @@ mod tests {
         let mut states = GameState::new();
         states.inventory.player.add(Resource::Wood, 1);
         states.inventory.player.add(Resource::Fiber, 5);
-        let system = ProgressionSystem::new();
 
-        let outcome = system.purchase(Unlockable::ExplorationRadius, "player".to_string(), &mut states);
+        let outcome = purchase(Unlockable::ExplorationRadius, "player".to_string(), &mut states);
 
         assert!(matches!(outcome.events.as_slice(), [Event::InventoryUpdated { .. }, Event::ProgressionUpdated { .. }]));
         assert!(matches!(outcome.effect, Some(UnlockEffect::RevealMap { radius: 2 })));
@@ -117,10 +107,9 @@ mod tests {
     #[test]
     fn purchase_scaling_unlockable_fails_past_max_tier() {
         let mut states = GameState::new();
-        let system = ProgressionSystem::new();
         states.progression.set_tier(Unlockable::ExplorationRadius, Unlockable::ExplorationRadius.max_tier().unwrap());
 
-        let outcome = system.purchase(Unlockable::ExplorationRadius, "player".to_string(), &mut states);
+        let outcome = purchase(Unlockable::ExplorationRadius, "player".to_string(), &mut states);
 
         assert!(matches!(outcome.events.as_slice(), [Event::UnlockFailed { .. }]));
     }

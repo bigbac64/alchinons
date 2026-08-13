@@ -21,12 +21,12 @@ pub enum CommandOutput {
     None,
 }
 
-pub struct SystemOutcome {
+pub struct Outcome {
     pub output: CommandOutput,
     pub events: Vec<Event>,
 }
 
-impl SystemOutcome {
+impl Outcome {
     pub fn output(output: CommandOutput) -> Self {
         Self { output, events: vec![] }
     }
@@ -36,4 +36,5 @@ impl SystemOutcome {
     pub fn both(output: CommandOutput, events: Vec<Event>) -> Self {
         Self { output, events }
     }
+    pub fn none() -> Self { Self { output: CommandOutput::None, events: vec![] } }
 }

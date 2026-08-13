@@ -43,7 +43,7 @@ Command (entrée)  →  System (mutation de l'état)  →  Event (notification) 
                         GameState (données)
 ```
 
-Cette frontière `Command → System → State` doit rester la colonne vertébrale du moteur. Ce qui doit changer, c'est la façon dont le code est **rangé** autour de cette colonne (voir §2.2) et la façon dont elle est **protégée par le compilateur** plutôt que par la convention (voir §2.6, §4.4).
+Cette frontière `Command → System → State` doit rester la colonne vertébrale du moteur. Ce qui doit changer, c'est la façon dont le code est **rangé** autour de cette colonne (voir §2.2) et la façon dont elle est **protégée par le compilateur** plutôt que par la convention (voir §2.6, §4.4). Le mécanisme concret de routage d'une `Command` vers le `System` de son domaine est documenté en §2.9.
 
 ### 2.2 Modularité — organiser par domaine, pas par couche technique
 
@@ -60,8 +60,8 @@ engine/src/
 ├── state.rs               # GameState : composition de l'état, un champ par domaine
 ├── position.rs            # type transverse partagé par tous les domaines
 ├── resource.rs             # Resource, LootEntry — transverse (inventory + craft + world)
-├── commands/               # Command (enum), EngineCommand, CommandOutput — frontière publique
-│   ├── mod.rs
+├── commands/               # Command (enum), EngineCommand, StructCommand, CommandOutput — frontière publique
+│   ├── mod.rs               # Command::execute : unique point de routage vers les domaines (cf. §2.9)
 │   └── outcome.rs
 ├── events/                 # Event (enum), EngineBroadcast — frontière publique
 │   ├── mod.rs
@@ -70,27 +70,29 @@ engine/src/
 ├── player/
 │   ├── mod.rs
 │   ├── model.rs            # Player
-│   └── state.rs            # PlayerState
+│   ├── state.rs            # PlayerState
+│   └── command.rs          # GetPlayerPayload, impl StructCommand (cf. §2.9)
 │
 ├── craft/
 │   ├── mod.rs
 │   ├── recipe.rs           # Recipe, RecipeDefinition
 │   ├── state.rs            # CraftState, PendingCraft (file d'attente)
-│   ├── system.rs           # CraftSystem
+│   ├── system.rs           # fonctions libres execute()/tick() — plus de struct, cf. §2.5
 │   ├── view.rs              # RecipeView, RecipeDefinitionView, RecipeAmountView
-│   └── command.rs           # CraftPayload
+│   └── command.rs           # CraftPayload, GetRecipesPayload, impl StructCommand (cf. §2.9)
 │
 ├── inventory/
 │   ├── mod.rs
 │   ├── model.rs             # Inventory
 │   ├── state.rs             # InventoryState
-│   ├── system.rs             # TransferInventorySystem
+│   ├── system.rs             # fonction libre execute() — plus de struct, cf. §2.5
 │   ├── view.rs
-│   └── command.rs            # TransferInventoryPayload
+│   └── command.rs            # TransferInventoryPayload, GetInventoryPayload, impl StructCommand
 │
 ├── movement/                  # déplacement du joueur (Command::Move)
 │   ├── mod.rs
-│   ├── system.rs              # MoveSystem
+│   ├── system.rs              # fonction libre moving_player() — plus de struct, cf. §2.5
+│   ├── command.rs              # MovePayload, impl StructCommand
 │   └── utils/
 │       ├── mod.rs
 │       └── pathfinding.rs     # A* + distance hexagonale — algo pur, pas un rôle CMSSV (cf. §4.3)
@@ -98,7 +100,8 @@ engine/src/
 ├── gather/                    # cueillette/récolte (Command::Gather) — distinct de movement : ce n'est pas
 │   │                          # du déplacement mais de la résolution de loot sur la tile courante
 │   ├── mod.rs
-│   ├── system.rs              # GatherSystem
+│   ├── system.rs              # fonctions libres propose()/select() — plus de struct, cf. §2.5
+│   ├── command.rs              # GatherPayload, GatherSelectPayload, impl StructCommand
 │   └── utils/
 │       ├── mod.rs
 │       └── loot.rs            # Looting — algo pur, pas un rôle CMSSV (cf. §4.3)
@@ -110,16 +113,18 @@ engine/src/
     ├── area.rs                 # Area, AreaType, Shape
     ├── tile.rs                  # Tile + catalogue des tuiles (scindé d'area.rs, cf. §4.2)
     ├── terrain.rs
-    └── view.rs
+    ├── view.rs
+    ├── system.rs                # TileSystem — fonctions associées sans `&self`, jamais instancié
+    └── command.rs                # ExploitablePayload, ExploitablePlayerPositionPayload, GetMapPayload, GetTerrainPayload
 ```
 
-Un nouveau contributeur (ou une IA) qui doit modifier le craft n'ouvre plus qu'**un seul dossier**. `GameState` reste le point de composition (il assemble un état par domaine), et `GameEngine::execute` reste le point de routage — mais chaque domaine possède et fait évoluer son propre `System`/`State`/`View`/payload de `Command` sans avoir à répartir ses fichiers dans l'arborescence globale.
+Un nouveau contributeur (ou une IA) qui doit modifier le craft n'ouvre plus qu'**un seul dossier**. `GameState` reste le point de composition (il assemble un état par domaine), et `Command::execute` (§2.9) reste le seul point de routage — mais chaque domaine possède et fait évoluer son propre `System`/`State`/`View`/payload de `Command` sans avoir à répartir ses fichiers dans l'arborescence globale, ni toucher `engine.rs`.
 
 > **Ajustement (2026-07-28) :** `gather` avait d'abord été rangé sous `movement` ("présence sur la carte"), mais c'était une erreur de regroupement par *symptôme* (les deux touchent la position du joueur) plutôt que par *concept* (l'un déplace, l'autre résout du loot — deux `Command` distinctes, deux responsabilités sans rapport). `gather` est désormais son propre domaine. Par la même occasion, `Looting` (ex `world::loot`) a été déplacé de `world/` vers `gather/utils/` : il ne dépendait d'ailleurs d'aucun type de `world` (seulement de `resource::{LootEntry, Resource}`), il n'était utilisé que par `GatherSystem`, et sa présence dans `world/` tenait uniquement au fait que les tables de loot sont *définies* sur les `AreaTypeDefinition` de `world/area.rs` — sa place naturelle est avec son seul appelant, pas avec la donnée qu'il consomme.
 
-> Note d'implémentation : `commands/` et `events/` restent des dossiers (et non de simples fichiers `command.rs`/`event.rs`) parce qu'ils contiennent chacun plus d'un type transverse (`Command` + `CommandOutput`/`SystemOutcome` ; `Event` + le sous-module `inventory` hérité, cf. annexe). Rien n'empêche de les aplatir plus tard si leur contenu se simplifie.
+> Note d'implémentation : `commands/` et `events/` restent des dossiers (et non de simples fichiers `command.rs`/`event.rs`) parce qu'ils contiennent chacun plus d'un type transverse (`Command` + `CommandOutput`/`Outcome` ; `Event` + le sous-module `inventory` hérité, cf. annexe). Rien n'empêche de les aplatir plus tard si leur contenu se simplifie.
 >
-> Cette réorganisation n'était pas cosmétique : c'était le moment le moins coûteux pour la faire (≈1800 lignes, un seul contributeur). Le §2.5 (systems sans état) et le §2.7 (visibilité `pub`) restent les chantiers suivants recommandés — la réorg de fichiers ne les résout pas à elle seule (cf. §1 de l'annexe §6).
+> Cette réorganisation n'était pas cosmétique : c'était le moment le moins coûteux pour la faire (≈1800 lignes, un seul contributeur). Le §2.7 (visibilité `pub`) reste le chantier suivant recommandé — le §2.5 (systems sans état) a depuis été résolu en même temps que le découplage du routage des `Command` (cf. §2.9, 2026-08-13).
 
 ### 2.3 Découplage
 
@@ -137,9 +142,9 @@ Le moteur a déjà un bon exemple de ce principe : `movement::utils::pathfinding
 
 ### 2.5 Une abstraction doit se justifier par un besoin, pas par convention
 
-Les quatre `System` actuels (`GatherSystem`, `MoveSystem`, `TransferInventorySystem`, `CraftSystem`) sont des structures **sans aucun champ** (`Self {}`), qui n'existent que pour porter une méthode `execute`. Aujourd'hui, ce sont des fonctions libres déguisées en objets.
+**Résolu (2026-08-13).** Les cinq `System` qui n'avaient aucun champ (`Self {}`) — `GatherSystem`, `MoveSystem`, `TransferInventorySystem`, `CraftSystem`, `ProgressionSystem` — n'existaient que pour porter une méthode `execute` : des fonctions libres déguisées en objets. Ils ont été remplacés par des fonctions libres dans leur `system.rs` (`gather::system::{propose, select}`, `movement::system::moving_player`, `inventory::system::execute`, `craft::system::{execute, tick}`, `progression::system::purchase`) — plus de `::new()`, plus d'instance stockée sur `GameEngine` (voir §2.9 : ce nettoyage a été fait en même temps que le découplage du routage des `Command`, parce que les deux problèmes partageaient la même cause — `GameEngine` gardait une instance par système pour appeler `self.xxx_system.execute(...)`). `TileSystem` (`world/system.rs`) n'a jamais eu ce problème : ses méthodes n'ont jamais pris `&self`, ce n'était pas un objet à corriger.
 
-**Règle : une structure ne se justifie que si elle porte un état ou une dépendance.** Deux issues possibles, à trancher explicitement au moment d'ajouter le prochain système plutôt que par copier-coller du pattern existant :
+**Règle, toujours valable pour tout futur système :** une structure ne se justifie que si elle porte un état ou une dépendance. Deux issues possibles, à trancher explicitement au moment d'ajouter le prochain système plutôt que par copier-coller du pattern existant :
 
 - Si un système n'a et n'aura pas d'état → une fonction libre `pub fn execute(...)` dans le module du domaine suffit, pas de structure.
 - Si un système a besoin d'une dépendance injectée (voir §2.6 sur le RNG ci-dessous, un exemple concret et déjà présent dans le code) → la structure se justifie, et elle doit porter cette dépendance dès sa création, pas rester vide "pour l'instant".
@@ -188,6 +193,28 @@ Ces deux espaces de coordonnées n'ont ni la même échelle, ni la même origine
 
 De la même façon, les inventaires sont identifiés par une `String` brute (`"player"`, `"warehouse"`) matchée à la main dans `InventoryState::get_by_name(_mut)`, et cette même chaîne est dupliquée côté frontend (`src/utils/api.js`). Ajouter un troisième inventaire impose de mettre à jour ce match à deux endroits et de ressaisir la bonne chaîne magique partout. **Recommandation : remplacer les noms d'inventaire par un enum `InventoryId` sérialisable**, pour que le compilateur signale un `match` non exhaustif dès qu'un inventaire est ajouté, au lieu de retomber silencieusement sur `None` en cas de faute de frappe.
 
+### 2.9 Décision tranchée : routage des `Command` via `StructCommand`, pas un `match` central
+
+**Décision (2026-08-13).** `GameEngine::execute` contenait un `match` unique d'une douzaine de bras mélangeant routage, appel système, construction de `Outcome`, et — pour `Purchase` — un effet cross-domaine (révélation de carte) avec sa sauvegarde codée en dur. Rien n'empêchait ce `match` de continuer à grossir d'un bras à chaque nouvelle commande : exactement le style de couplage que §2.2 a déjà éliminé pour l'arborescence des fichiers, mais qui subsistait dans `engine.rs`.
+
+**Règle : chaque payload de `Command` sait s'exécuter lui-même.** Un trait dans `commands/mod.rs` définit le contrat :
+
+```rust
+pub trait StructCommand {
+    fn execute(self, states: &mut GameState) -> Outcome;
+}
+```
+
+**Règle : toute variante de `Command` porte un payload — même vide.** Y compris les getters qui n'ont aujourd'hui aucune donnée (`GetMap`, `GetPlayer`, `GetTerrain`, `GetRecipes`, `GetProgression`, `Gather`, `ExploitablePlayerPosition`) : chacun a son propre struct unité (`GetMapPayload`, `GatherPayload`...) qui implémente `StructCommand`. Ce n'est pas une abstraction gratuite malgré §2.5 : la structure existe pour porter la *forme* de la variante (`Command::X(XPayload)`, uniformément un newtype), pas un état. Le bénéfice concret : faire évoluer un jour `GetInventory`-like getter pour accepter un filtre n'impose pas de changer la forme de la variante (`Command::X { .. }` → `Command::X(XPayload)`, ce qui casserait tous les call sites Rust *et* le contrat JSON) — seulement d'ajouter un champ à un struct qui existe déjà. Chaque payload de domaine (avec ou sans données) l'implémente dans son propre `*/command.rs` et délègue à son `system.rs` — le payload ne fait qu'orienter, jamais de logique métier (cf. §4.3). `self` est pris **par valeur** : une `Command` n'est exécutée qu'une seule fois, jamais réutilisée après.
+
+`Command::execute` (méthode inhérente sur `Command` — pas une implémentation du trait, `Command` route vers les payloads, elle n'en est pas un elle-même) reste le seul `match` exhaustif du crate sur l'enum `Command`, et chaque bras est désormais uniformément `payload.execute(states)`, y compris pour les getters. Le compilateur garde l'exhaustivité : oublier de câbler une nouvelle variante ne compile pas. **Ajouter une commande ne touche plus jamais `engine.rs`** — seulement `commands/mod.rs` (la variante + le bras de routage) et le `command.rs` du domaine concerné.
+
+**Contrat JSON : une variante newtype (`Command::X(XPayload)`) sérialise en `{"X": <payload>}`, sans niveau d'imbrication supplémentaire.** Un payload vide (struct unité) se désérialise depuis `null` → `{"X": null}` côté frontend, jamais `"X"` (chaîne nue, l'ancienne forme pour une variante sans donnée) ni `{"X": {}}`. Piège concret rencontré pendant ce refactor : `Command::Craft`/`Command::Purchase` étaient à l'origine des variantes *struct* avec un champ nommé `payload` (`Craft { payload: CraftPayload }`), ce qui exigeait `{"Craft": {"payload": {...}}}` côté JSON — en les convertissant en newtype (`Craft(CraftPayload)`) sans mettre à jour `src/api/engine.js` en même temps, la désérialisation aurait cassé silencieusement au runtime (le compilateur Rust ne peut rien voir côté JS). **Toute variante de `Command` a maintenant la même forme (newtype), donc la même règle JSON s'applique partout sans exception à retenir.** `commands/mod.rs` porte deux tests de régression (`unit_payload_deserializes_from_null`, `data_payload_deserializes_flat_without_payload_key`) qui verrouillent ce contrat côté Rust ; ils ne remplacent pas un test d'intégration avec le frontend, qu'`engine` seul ne peut pas fournir.
+
+**Exception assumée : `ResetSave`.** Cette commande a besoin de `save_path`, que seul `GameEngine` possède — `GameState` ne le porte pas et ne doit pas le porter (§2.3 : un domaine ne connaît que son propre état, `save_path` n'est l'état d'aucun domaine). `ResetSavePayload` existe (uniformité de forme, comme ci-dessus) mais vit dans `commands/mod.rs` plutôt que dans un domaine : cette commande n'appartient à aucun domaine, elle réinitialise plusieurs états à la fois via `GameEngine`. Elle est interceptée par `GameEngine::execute` *avant* d'atteindre `Command::execute`, plutôt que de forcer `save_path` dans la signature de `StructCommand` pour un seul cas sur une douzaine. `Command::execute` garde malgré tout un bras `Command::ResetSave(_)` (log d'erreur + `Outcome::none()`), imposé par l'exhaustivité du `match` : un filet de sécurité si l'interception dans `GameEngine` venait à être retirée par erreur — jamais un `panic!`, conformément à §4.5 (un panic ne doit jamais être atteignable depuis le traitement d'une `Command`, sous peine d'empoisonner le `Mutex` de `src-tauri`).
+
+**Persistance découplée du routage.** `GameEngine::persist_on_events` réagit génériquement aux `Event` produits — indépendamment de la `Command` d'origine — pour déclencher les sauvegardes par domaine. `Purchase` (`progression/command.rs`) ne sauvegarde plus `world` en dur après un `RevealMap` : il se contente d'émettre `Event::MapUpdated`, et `persist_on_events` y réagit comme pour les trois autres domaines déjà persistés (`ProgressionUpdated`, `MovePath`, `InventoryUpdated`). Ajouter un domaine persistant de plus ne touche que cette fonction, jamais le routage des `Command`.
+
 ---
 
 ## 3. Organisation des modules
@@ -198,7 +225,7 @@ De la même façon, les inventaires sont identifiés par une `String` brute (`"p
 - Son propre état (`State`), possédé et composé par `GameState`.
 - Son propre `System` (fonction ou structure, cf. §2.5), seul autorisé à muter son `State`.
 - Sa propre `View` (DTO de sortie vers le frontend).
-- Le payload de sa/ses variante(s) de `Command`.
+- Le payload de sa/ses variante(s) de `Command`, et l'implémentation de `StructCommand` qui l'exécute en délégant à son `system.rs` (cf. §2.9).
 - Ses propres tests unitaires (hors périmètre de cette revue, mais ils vivent avec le code qu'ils testent).
 
 ### 3.2 Ce qu'un module de domaine ne doit jamais contenir
@@ -261,6 +288,8 @@ Un domaine (`craft/`, `inventory/`, ...) se compose d'au plus cinq rôles de fic
 
 `inventory/` est aujourd'hui l'exemple complet des cinq rôles. Un domaine n'a pas à tous les porter : `player/` n'a que Model + State (rien à commander ni à afficher directement), et c'est très bien ainsi — CMSSV énumère les rôles *possibles*, pas une check-list obligatoire.
 
+**Nuance introduite par §2.9 :** un `command.rs` porte désormais aussi l'implémentation de `StructCommand::execute`. Ce n'est pas une exception à la colonne "Ne contient jamais : Toute logique" — c'est une clarification. `StructCommand::execute` ne fait qu'**orienter** : un ou deux appels vers `system.rs`, jamais de calcul ni de règle métier. Si l'`execute` d'un payload dépasse une poignée de lignes ou contient une branche `if`/`match` qui n'est pas de la simple délégation, cette logique doit migrer vers `system.rs`.
+
 **La limite du modèle, et l'échappatoire `utils/` :** tout ce qu'un domaine contient n'est pas forcément l'un de ces cinq rôles. Un algorithme pur — sans état, sans accès à `GameState`, réutilisable indépendamment de tout `System` — n'est ni un Model (il ne représente pas une donnée de jeu), ni un System (il ne mute rien). Le forcer dans `system.rs` sous prétexte que "c'est de la logique" produit un fichier qui mélange deux natures différentes : la logique métier qui orchestre une `Command`, et l'algorithme générique qu'elle appelle. **Un tel fichier va dans un sous-dossier `domaine/utils/`.** Exemple réel : `movement::utils::pathfinding` (A* + distance hexagonale — aucune dépendance à `GameState`/`Event`) et `gather::utils::loot` (tirage de ressources depuis une table de loot — même chose).
 
 `utils/` n'est pas une case fourre-tout : il n'accueille que des fonctions/structures pures, sans effet de bord, sans dépendance à `GameState` — le jour où un fichier de `utils/` a besoin de lire ou muter l'état du jeu, ce n'est plus un algorithme pur et il doit redevenir un `system.rs` ou en faire partie. Ne créez pas de `utils/` par anticipation (§2.5, §2.6) : un domaine sans algorithme pur à isoler n'en a pas besoin.
@@ -282,7 +311,7 @@ Le moteur mélange aujourd'hui trois stratégies sans règle explicite : `Option
 
 - **`Result`/`Option`** pour tout ce qui peut légitimement échouer en fonctionnement normal (inventaire introuvable, chemin bloqué, ressources insuffisantes) — c'est déjà majoritairement le cas et doit rester la norme.
 - **`panic!`/`unwrap()`** réservé aux invariants internes vraiment impossibles à violer, et **jamais atteignable depuis le traitement d'une `Command`** venant du frontend. Aujourd'hui, `state.engine.lock().unwrap()` (dans `src-tauri/src/commands.rs` et `lib.rs`) est exactement le cas à éviter : si un seul `panic!` se produit n'importe où pendant l'exécution d'une commande (par exemple un futur `unwrap()` mal placé dans un système), le `Mutex` est empoisonné et **toute commande suivante panique à son tour, pour le reste de la session** — un bug local devient un plantage permanent de l'application. Avant d'ajouter un scheduler ou une boucle de tick (cf. §4.7), ce point doit être traité : soit récupérer le poisoning explicitement, soit garantir par construction qu'aucun `panic!` ne peut se produire pendant l'exécution d'un `System`.
-- **Un type de résultat doit se lire sans ambiguïté.** `Inventory::excludes` retourne `None` quand le retrait a **entièrement réussi**, et `Some(partiel)` quand il y a eu débordement — l'inverse de ce qu'on lit intuitivement dans un `Option` (`None` = rien de notable, `Some` = cas particulier à gérer). Cette inversion sémantique a une conséquence réelle : `TransferInventorySystem::execute` (inventory/system.rs) traite le cas `None` (transfert complet, le cas courant) en appelant `destination_inventory.excludes(...)` au lieu de `add_multi(...)` — **les ressources sont retirées de la destination au lieu d'y être ajoutées**. Un transfert complet fait donc disparaître les ressources au lieu de les déplacer. C'est un bug réel, présent dans le code actuel, non détecté faute de test sur ce module. Il illustre exactement pourquoi ce document interdit les `Option`/`Result` dont le sens n'est pas évident à la lecture de l'appel : préférer un type explicite (`enum ExclusionOutcome { Full, Partial(HashMap<Resource, u32>) }`) à un `Option` dont la signification s'apprend seulement en lisant le corps de la fonction.
+- **Un type de résultat doit se lire sans ambiguïté.** `Inventory::excludes` retourne `None` quand le retrait a **entièrement réussi**, et `Some(partiel)` quand il y a eu débordement — l'inverse de ce qu'on lit intuitivement dans un `Option` (`None` = rien de notable, `Some` = cas particulier à gérer). Cette inversion sémantique a une conséquence réelle : `inventory::system::execute` (inventory/system.rs, ex-`TransferInventorySystem::execute` avant §2.9) traite le cas `None` (transfert complet, le cas courant) en appelant `destination_inventory.excludes(...)` au lieu de `add_multi(...)` — **les ressources sont retirées de la destination au lieu d'y être ajoutées**. Un transfert complet fait donc disparaître les ressources au lieu de les déplacer. C'est un bug réel, présent dans le code actuel, non détecté faute de test sur ce module. Il illustre exactement pourquoi ce document interdit les `Option`/`Result` dont le sens n'est pas évident à la lecture de l'appel : préférer un type explicite (`enum ExclusionOutcome { Full, Partial(HashMap<Resource, u32>) }`) à un `Option` dont la signification s'apprend seulement en lisant le corps de la fonction.
 
 ### 4.6 `enum`, `struct`, `trait`, `impl`
 
@@ -293,7 +322,7 @@ Le moteur mélange aujourd'hui trois stratégies sans règle explicite : `Option
 
 ### 4.7 Décision à trancher : le modèle d'exécution (tick / boucle de jeu)
 
-`CraftState::tick` et `CraftSystem::tick` sont entièrement implémentés et testés, mais **rien ne les appelle** — `engine.rs` contient deux commentaires (`//fn tick()`, `//fn scheduler()`) qui montrent que la question est identifiée mais non tranchée. Aujourd'hui, le moteur est purement réactif : une `Command` entre, une transition d'état sort, rien ne se passe en l'absence de commande — alors même que des données à durée (`duration`, `remaining_ticks`) existent déjà dans le domaine du craft.
+`CraftState::tick` et `craft::system::tick` (ex-`CraftSystem::tick` avant §2.9) sont entièrement implémentés et testés, mais **rien ne les appelle** — `engine.rs` contient deux commentaires (`//fn tick()`, `//fn scheduler()`) qui montrent que la question est identifiée mais non tranchée. Aujourd'hui, le moteur est purement réactif : une `Command` entre, une transition d'état sort, rien ne se passe en l'absence de commande — alors même que des données à durée (`duration`, `remaining_ticks`) existent déjà dans le domaine du craft.
 
 Cette ambiguïté doit être résolue **avant** la prochaine fonctionnalité qui dépend du temps (faim, météo, cuisson longue...), pas pendant. Deux options légitimes, à choisir consciemment et à documenter ici une fois choisie :
 
@@ -344,24 +373,35 @@ Priorité d'application recommandée, du plus structurant au plus local :
 
 1. ~~Réorganiser `engine/src` par domaine (§2.2)~~ — **fait (2026-07-28)**. Compilation et tests vérifiés (`cargo check --workspace`, `cargo test -p engine`, `cargo test -p alchinons`) ; `src-tauri` n'a nécessité aucune modification, seule l'API publique du crate (`commands`, `events`, `engine`) étant consommée depuis l'extérieur.
 2. ~~Trancher le sort du module `ecs` (§3.4)~~ — **fait (2026-07-28)**, renommé `world` (+ `player` séparé), vocabulaire "ECS" retiré du README.
-3. Restreindre la visibilité de `lib.rs` (§2.7) — coût faible, bénéfice immédiat, aucune régression fonctionnelle possible (le compilateur signale tout usage externe cassé). Reste à faire.
-4. Séparer `GridPosition`/`LocalPoint` (§2.8).
-5. Corriger le bug de `TransferInventorySystem` (§4.5) et clarifier le contrat de retour de `Inventory::excludes`.
-6. Nettoyer le code mort identifié (`Event::name`/`Event::payload` inutilisés, `events::inventory::InventoryChanged` vide, dépendances `euclid`/`uuid` inutilisées).
-7. Trancher le modèle d'exécution tick/scheduler (§4.7) avant la prochaine fonctionnalité à durée.
+3. ~~Aplatir les `System` sans état et découpler le routage des `Command` (§2.5, §2.9)~~ — **fait (2026-08-13)**. `GatherSystem`/`MoveSystem`/`TransferInventorySystem`/`CraftSystem`/`ProgressionSystem` remplacés par des fonctions libres ; `GameEngine::execute` réduit à un dispatch (+ l'exception `ResetSave`) et à `persist_on_events`, via le trait `StructCommand` implémenté par chaque payload de domaine. Vérifié par `cargo check --workspace` et `cargo test -p engine` (25/27 — les 2 échecs sont préexistants et sans rapport avec ce changement, cf. annexe) ; `src-tauri` n'a nécessité aucune modification.
+4. Restreindre la visibilité de `lib.rs` (§2.7) — coût faible, bénéfice immédiat, aucune régression fonctionnelle possible (le compilateur signale tout usage externe cassé). Reste à faire.
+5. Séparer `GridPosition`/`LocalPoint` (§2.8).
+6. Corriger le bug de `inventory::system::execute` (§4.5) et clarifier le contrat de retour de `Inventory::excludes`.
+7. Nettoyer le code mort identifié (`Event::name`/`Event::payload` inutilisés, `events::inventory::InventoryChanged` vide, dépendances `euclid`/`uuid` inutilisées).
+8. Trancher le modèle d'exécution tick/scheduler (§4.7) avant la prochaine fonctionnalité à durée.
 
-### Annexe — constats concrets relevés lors de cette revue (dernière mise à jour : 2026-07-28)
+### Annexe — constats concrets relevés lors de cette revue (dernière mise à jour : 2026-08-13)
 
 Cette liste n'est pas une todo-list figée : elle documente ce qui a été identifié pour que personne (humain ou IA) n'ait à le redécouvrir, et pour que chaque élément soit retiré de cette annexe au fur et à mesure qu'il est traité.
 
 **Non résolus :**
 
-- **Bug** — `inventory/system.rs` : `TransferInventorySystem::execute` inverse le cas "transfert complet" et le cas "débordement" à cause du sens contre-intuitif du retour de `Inventory::excludes` (voir §4.5). Un transfert complet fait disparaître les ressources au lieu de les déplacer vers la destination.
+- **Bug** — `inventory/system.rs` : `inventory::system::execute` (ex-`TransferInventorySystem::execute`) inverse le cas "transfert complet" et le cas "débordement" à cause du sens contre-intuitif du retour de `Inventory::excludes` (voir §4.5). Un transfert complet fait disparaître les ressources au lieu de les déplacer vers la destination. Non touché par le refactor du routage (§2.9) : le déplacement en fonction libre a été purement mécanique, le bug est identique.
 - **Code mort** — `events/mod.rs` : `Event::name()` et `Event::payload()` ne sont appelés nulle part (le canal Tauri sérialise l'`enum` directement via `#[derive(Serialize)]`).
 - **Code mort** — `events/inventory.rs` : `InventoryChanged {}` est une structure vide, jamais utilisée.
 - **Dépendances inutilisées** — `engine/Cargo.toml` : `euclid` et `uuid` ne sont référencés nulle part dans le code.
-- **Fonctionnalité à moitié câblée** — `CraftState::tick`/`CraftSystem::tick` sont implémentés et testés mais jamais appelés (voir §4.7).
-- **Test préexistant en échec** — `craft::system::tests::deferred_recipe_resolves_after_enough_ticks` panique (`attempt to subtract with overflow`) car `Recipe::Charcoal.definition().duration` vaut `0`, et le test calcule `duration - 1` sur un `u32`. Constaté lors de la réorganisation du 2026-07-28 (non introduit par elle : la valeur `duration: 0` était déjà celle du fichier avant tout déplacement) ; hors périmètre de cette revue (tests exclus), mais à corriger séparément.
+- **Fonctionnalité à moitié câblée** — `CraftState::tick`/`craft::system::tick` sont implémentés et testés mais jamais appelés (voir §4.7).
+- **Test préexistant en échec** — `craft::system::tests::deferred_recipe_resolves_after_enough_ticks` panique (`attempt to subtract with overflow`) car `Recipe::Charcoal.definition().duration` vaut `0`, et le test calcule `duration - 1` sur un `u32`. Constaté lors de la réorganisation du 2026-07-28 (non introduit par elle : la valeur `duration: 0` était déjà celle du fichier avant tout déplacement) ; toujours présent après le refactor du routage (§2.9, mécanique uniquement) ; hors périmètre de cette revue (tests exclus), mais à corriger séparément.
+- **Test préexistant en échec, sans rapport** — `progression::persistence::tests::save_then_load_roundtrips_state` échoue (`Os { code: 21, kind: IsADirectory }`), reproductible sur `master` avant le refactor du routage (§2.9) via `git stash`. Non lié à ce document, probablement un chemin de fichier de test qui collisionne avec un répertoire existant sur la machine de dev.
+- **Bug préexistant, sans rapport, découvert pendant ce refactor** — `src/api/engine.js::transferInventory` envoie `{ source_name, destination_name, items }`, alors que `TransferInventoryPayload` (`inventory/command.rs`) attend `{ source, destination, items }`. Cette fonction n'est appelée nulle part ailleurs dans `src/` (vérifié par recherche exhaustive) — code mort côté frontend, jamais exercé, donc jamais remarqué. Non corrigé ici : hors périmètre `engine`, et corriger le nom de champ sans savoir quel écran doit l'appeler serait deviner l'intention.
+
+**Résolus (2026-08-13, découplage du routage des `Command`) :**
+
+- Aplatissement des cinq `System` sans état en fonctions libres (§2.5) : `GatherSystem`, `MoveSystem`, `TransferInventorySystem`, `CraftSystem`, `ProgressionSystem`.
+- Introduction du trait `StructCommand` (`commands/mod.rs`) et de `Command::execute` comme unique point de routage exhaustif vers les domaines (§2.9) — **toute** variante de `Command` porte désormais un payload dédié qui implémente `StructCommand`, y compris les getters sans donnée (`GatherPayload`, `GetMapPayload`, `GetTerrainPayload`, `GetPlayerPayload`, `GetRecipesPayload`, `GetProgressionPayload`, `ExploitablePlayerPositionPayload`, `ResetSavePayload`) — uniformité choisie pour qu'un getter qui gagne un jour un paramètre n'ait qu'un champ à ajouter, jamais sa forme de variante à changer.
+- `GameEngine::execute` réduit à un dispatch (+ l'exception `ResetSave`, qui a besoin de `save_path`) et à `persist_on_events` — ajouter une commande ne touche plus `engine.rs`.
+- Persistance de l'effet `RevealMap` de `Purchase` généralisée : `progression/command.rs` émet `Event::MapUpdated`, et `GameEngine::persist_on_events` y réagit comme pour les trois autres domaines persistés, au lieu d'un `world::persistence::save` codé en dur dans l'ancien bras `Purchase` de `engine.rs`.
+- **Correction en cours de route** — passer `Craft`/`Purchase`/toutes les variantes en newtype (`Command::X(XPayload)`) change leur forme JSON. `Command::Craft`/`Command::Purchase` étaient à l'origine des variantes struct avec un champ `payload` imbriqué (`{"Craft": {"payload": {...}}}`) ; la conversion en newtype (`{"Craft": {...}}`) a été faite sans mettre à jour `src/api/engine.js` dans la même passe, cassant silencieusement `craft()`/`purchase()` (activement utilisés par `useCraft.js`, `Oven.jsx`, `Carte.jsx`). Repéré en relisant `src/api/engine.js` avant de généraliser le pattern aux getters, corrigé dans la foulée : `src/api/engine.js` envoie maintenant `{ Craft: { recipe, inventory } }` / `{ Purchase: { unlockable, inventory } }` (sans le niveau `payload`) et `{ X: null }` pour tout payload vide (`"Gather"` seul ne désérialise plus). Deux tests de régression verrouillent ce contrat côté Rust (`commands::tests::unit_payload_deserializes_from_null`, `data_payload_deserializes_flat_without_payload_key`).
 
 **Résolus (2026-07-28, lors de la réorganisation par domaine) :**
 

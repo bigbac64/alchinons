@@ -26,7 +26,8 @@ export const listenEngineEvents = (handlers) => {
 /**
  * Point d'envoi unique vers le moteur. Toute nouvelle commande passe par ici :
  * un seul endroit connaît la forme de la réponse ({ type, data }).
- * @param {object|string} command - variante de Command (ex. "Gather" ou {Move:{...}})
+ * @param {object} command - variante de Command : { Nom: payload } (ex. { Gather: null } ou { Move: {...} }).
+ *   Toute variante Rust porte un payload, même vide (`null`) — jamais de chaîne nue.
  */
 function sendCommand(command) {
   return invoke(ENGINE_COMMAND, { command }).then(({ data }) => data);
@@ -35,34 +36,34 @@ function sendCommand(command) {
 // --- Wrappers typés, un par variante de Command ---
 // Nouvelle commande Rust -> une ligne ici, jamais un invoke() ailleurs.
 
-export const gather = () => sendCommand("Gather");
+export const gather = () => sendCommand({ Gather: null });
 
-export const is_exploitable_player_position = () => sendCommand("ExploitablePlayerPosition");
+export const is_exploitable_player_position = () => sendCommand({ ExploitablePlayerPosition: null });
 export const is_exploitable_at = (position) => sendCommand({ Exploitable: { position } });
 
 export const gatherSelect = (resource) => sendCommand({ GatherSelect: { resource } });
 
 export const move = (position) => sendCommand({ Move: { position } });
 
-export const getMap = () => sendCommand("GetMap");
+export const getMap = () => sendCommand({ GetMap: null });
 
-export const getTerrain = () => sendCommand("GetTerrain");
+export const getTerrain = () => sendCommand({ GetTerrain: null });
 
-export const getPlayer = () => sendCommand("GetPlayer");
+export const getPlayer = () => sendCommand({ GetPlayer: null });
 
 export const getInventory = (name) => sendCommand({ GetInventory: { name } });
 
 export const transferInventory = (sourceName, destinationName, items) =>
   sendCommand({ TransferInventory: { source_name: sourceName, destination_name: destinationName, items } });
 
-export const getRecipes = () => sendCommand("GetRecipes");
+export const getRecipes = () => sendCommand({ GetRecipes: null });
 
 export const craft = (recipe, inventory) =>
-  sendCommand({ Craft: { payload: { recipe, inventory } } });
+  sendCommand({ Craft: { recipe, inventory } });
 
-export const getProgression = () => sendCommand("GetProgression");
+export const getProgression = () => sendCommand({ GetProgression: null });
 
 export const purchase = (unlockable, inventory) =>
-  sendCommand({ Purchase: { payload: { unlockable, inventory } } });
+  sendCommand({ Purchase: { unlockable, inventory } });
 
-export const reset = () => sendCommand("ResetSave");
+export const reset = () => sendCommand({ ResetSave: null });

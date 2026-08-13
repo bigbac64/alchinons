@@ -3,17 +3,10 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use tokio::sync::Notify;
 pub use crate::commands::Command;
-use crate::commands::outcome::{CommandOutput, SystemOutcome};
-use crate::inventory::model::Inventory;
-use crate::world::terrain::Terrain;
-use crate::craft::recipe::Recipe;
+use crate::commands::outcome::{CommandOutput, Outcome};
 use crate::events::Event;
 use crate::state::GameState;
-use crate::gather::system::GatherSystem;
-use crate::movement::system::MoveSystem;
-use crate::inventory::system::TransferInventorySystem;
-use crate::craft::system::CraftSystem;
-use crate::progression::{system::ProgressionSystem, unlockable::{Unlockable, UnlockEffect}};
+use crate::progression::unlockable::Unlockable;
 use crate::resource::Resource;
 use crate::{player, progression, saver, world};
 use crate::player::persistence::PLAYER_SAVE_NAME;
@@ -23,11 +16,6 @@ use crate::world::system::TileSystem;
 
 pub struct GameEngine {
     states: GameState,
-    gather_system: GatherSystem,
-    move_system: MoveSystem,
-    transfer_system: TransferInventorySystem,
-    craft_system: CraftSystem,
-    progression_system: ProgressionSystem,
     events: Vec<Event>,
     notify: Arc<Notify>, // Arc = partage l'objet avec un autrer
     save_path: PathBuf,
@@ -57,103 +45,48 @@ impl GameEngine {
 
         Self {
             states,
-            gather_system: GatherSystem::new(),
-            move_system: MoveSystem::new(),
-            transfer_system: TransferInventorySystem::new(),
-            craft_system: CraftSystem::new(),
-            progression_system: ProgressionSystem::new(),
             events: Vec::new(),
             notify,
             save_path,
         }
     }
-    
+
     pub fn drain_events(&mut self) -> Vec<Event>{
         take(&mut self.events)
     }
 
     pub fn execute(&mut self, command: Command) -> CommandOutput{
-        let SystemOutcome { output, events } = match command {
-            Command::ExploitablePlayerPosition => {
-                SystemOutcome::output(CommandOutput::ExploitableTile(TileSystem::exploitable_player_position(&mut self.states)))
-            }
-            Command::Exploitable { position } => {
-                println!("{:?}", position);
-                SystemOutcome::output(CommandOutput::ExploitableTile(TileSystem::exploitable(position.x as usize, position.y as usize, &mut self.states)))
-            }
-            Command::Gather => {
-                let output = CommandOutput::GatherOptions(self.gather_system.propose(&mut self.states));
-                SystemOutcome::output(output)
-            },
-            Command::GatherSelect { resource } => {
-                let (options, events) = self.gather_system.select(resource, &mut self.states);
-                SystemOutcome::both(CommandOutput::GatherOptions(options), events)
-            },
-            Command::GetMap => {
-                SystemOutcome::output(CommandOutput::Map(self.states.world.map.to_view()))
-            },
-            Command::GetTerrain => {
-                SystemOutcome::output(CommandOutput::Terrain(Terrain::view()))
-            },
-            Command::GetRecipes => {
-                SystemOutcome::output(CommandOutput::Recipes(Recipe::view()))
-            },
-            Command::GetPlayer => {
-                SystemOutcome::output(CommandOutput::Player(self.states.player.player.position))
-            },
-            Command::Move {position} => {
-                SystemOutcome::events(self.move_system.execute(position, &mut self.states))
-            },
-            Command::TransferInventory { payload } => {
-                SystemOutcome
-                ::events(self.transfer_system
-                    .execute(payload.source, payload.destination, payload.items, &mut self.states))
-            },
-            Command::Craft { payload } => {
-                SystemOutcome::events(self.craft_system.execute(payload.recipe, payload.inventory, &mut self.states))
-            },
-            Command::Purchase { payload } => {
-                let outcome = self.progression_system.purchase(payload.unlockable, payload.inventory, &mut self.states);
-                let mut events = outcome.events;
-
-                if let Some(UnlockEffect::RevealMap { radius }) = outcome.effect {
-                    if let Some(camp) = self.states.world.map.camp() {
-                        self.states.world.map.reveal(camp, radius);
-                        events.push(Event::MapUpdated { changes: self.states.world.map.to_view() });
-                        if let Err(err) = world::persistence::save(&self.save_path, &self.states.world) {
-                            eprintln!("progression save failed: {err}");
-                        }
-                    }
-                }
-
-                SystemOutcome::events(events)
-            },
-            Command::GetInventory {name} => {
-                SystemOutcome::output(CommandOutput::Inventory(
-                    self.states.inventory.get_by_name(
-                        name.as_str()
-                    ).unwrap_or(&Inventory::new(name))
-                        .to_view()
-                ))
-            },
-            Command::GetProgression => {
-                SystemOutcome::output(CommandOutput::Progression(self.states.progression.to_view()))
-            },
-            Command::ResetSave => {
-                saver::reset(&*self.save_path, PROGRESSION_SAVE_NAME);
-                self.states.progression = progression::persistence::load(&self.save_path);
-
-                saver::reset(&*self.save_path, PLAYER_SAVE_NAME);
-                self.states.player = player::persistence::load(&self.save_path);
-
-                saver::reset(&*self.save_path, WOLD_SAVE_NAME);
-                self.states.world = world::persistence::load(&self.save_path);
-
-                SystemOutcome::output(CommandOutput::None)
-
-            }
+        let Outcome { output, events } = match command {
+            Command::ResetSave(_) => self.reset_save(),
+            command => command.execute(&mut self.states),
         };
 
+        self.persist_on_events(&events);
+
+        if !events.is_empty() {
+            self.events.extend(events);
+            self.notify.notify_one();
+        }
+
+        output
+    }
+    fn reset_save(&mut self) -> Outcome {
+        saver::reset(&*self.save_path, PROGRESSION_SAVE_NAME);
+        self.states.progression = progression::persistence::load(&self.save_path);
+
+        saver::reset(&*self.save_path, PLAYER_SAVE_NAME);
+        self.states.player = player::persistence::load(&self.save_path);
+
+        saver::reset(&*self.save_path, WOLD_SAVE_NAME);
+        self.states.world = world::persistence::load(&self.save_path);
+
+        Outcome::output(CommandOutput::None)
+    }
+
+    /// Sauvegarde les domaines dont un `Event` signale un changement. Découplé
+    /// du routage des `Command` (cf. `execute`) : ajouter un domaine persistant
+    /// de plus ne demande de toucher qu'à cette fonction, jamais au dispatch.
+    fn persist_on_events(&mut self, events: &[Event]) {
         if events.iter().any(|event| matches!(event, Event::ProgressionUpdated { .. })) {
             if let Err(err) = progression::persistence::save(&self.save_path, &self.states.progression) {
                 eprintln!("progression save failed: {err}");
@@ -174,12 +107,11 @@ impl GameEngine {
             }
         }
 
-        if !events.is_empty() {
-            self.events.extend(events);
-            self.notify.notify_one();
+        if events.iter().any(|event| matches!(event, Event::MapUpdated { .. })) {
+            if let Err(err) = world::persistence::save(&self.save_path, &self.states.world) {
+                eprintln!("world save failed: {err}");
+            }
         }
-
-        output
     }
 
     //fn tick() un genre d'update general en boucle infini qui lance des events
