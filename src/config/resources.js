@@ -11,5 +11,6 @@ export const RESOURCE_ICONS = {
   Crystal: "💎",
   Mushroom: "🍄",
   Flower: "🌸",
-  Fiber: "/assets/fiber.png"
+  Fiber: "/assets/fiber.png",
+  empty: ""
 };

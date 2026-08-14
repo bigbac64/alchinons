@@ -5,7 +5,7 @@ import ButtonHold from "./ButtonHold";
 import ButtonDumper from "./ButtonDumper.jsx";
 import { SPRING_POP } from "../../../animations/springs.js";
 import { PILL_BUTTON_BASE } from "./styles.js";
-import { cx } from "../classNames.js";
+import { cx } from "../../../utils/classNames.js";
 
 
 const variants = {

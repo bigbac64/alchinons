@@ -9,6 +9,7 @@ export default function Slot({
   placeholder = null,
   layout = "tile",
   className = "",
+  ...other
 }) {
   const filled = !!resource;
   const showPlaceholder = !filled && placeholder;
@@ -25,7 +26,7 @@ export default function Slot({
           <ResourceIcon resource={resource?.name} className="text-base" />
           {resource?.name}
         </span>
-        <span className="rounded-md bg-slate-700 px-2.5 py-0.5 font-mono text-sm text-emerald-300">
+        <span className={`rounded-md bg-slate-700 px-2.5 py-0.5 font-mono text-sm text-emerald-300`}>
           {resource?.quantity}
         </span>
       </li>
@@ -40,6 +41,7 @@ export default function Slot({
         ${className}
         ${filled ? "border-emerald-600 bg-emerald-950/40" : "border-dashed border-slate-600 bg-slate-800/40"}
       `}
+      {...other}
     >
       {filled ? (
         <>

@@ -10,6 +10,7 @@ import NotFound from "./pages/NotFound.jsx";
 import Craft from "./pages/Craft.jsx";
 import Oven from "./pages/Oven.jsx";
 import Quest from "./pages/Quest.jsx";
+import Archemistery from "./pages/Archemistery.jsx";
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
             <Route path="craft" element={<Craft />} />
             <Route path="quest" element={<Quest />} />
             <Route path="oven" element={<Oven />} />
+            <Route path="arch" element={<Archemistery />} />
           </Route>
           <Route path="settings" element={<Settings />} />
           <Route path="carte" element={<Carte />} />

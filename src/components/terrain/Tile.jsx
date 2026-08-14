@@ -2,7 +2,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import Inventory from "../inventory/Inventory.jsx";
 import Panel from "../ui/Panel.jsx";
 import SectionHeader from "../ui/SectionHeader.jsx";
-import { cx } from "../ui/classNames.js";
+import { cx } from "../../utils/classNames.js";
 import { Fade } from "../../animations/presets.js";
 import { SPRING_POP } from "../../animations/springs.js";
 import ResourceIcon from "../ui/ResourceIcon.jsx";

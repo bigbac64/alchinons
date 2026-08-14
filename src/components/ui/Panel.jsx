@@ -1,4 +1,4 @@
-import { cx } from "./classNames.js";
+import { cx } from "../../utils/classNames.js";
 
 /**
  * Carte sombre standard du projet (fond, bordure, coins arrondis). Remplace

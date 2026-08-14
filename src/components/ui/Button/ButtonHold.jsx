@@ -4,7 +4,7 @@ import { radialGlow, progressGradient } from "../../../animations/gradients.js";
 import { SPRING_POP } from "../../../animations/springs.js";
 import { useHoldProgress } from "../../../hooks/useHoldProgress.js";
 import { PILL_BUTTON_BASE } from "./styles.js";
-import { cx } from "../classNames.js";
+import { cx } from "../../../utils/classNames.js";
 
 const ButtonHold = ({children, holdDuration = 2000, onClick, disabled = false,
                       className = ""}) => {

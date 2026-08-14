@@ -25,6 +25,11 @@ function CampLayout() {
       label: "Quêtes",
       className: "font-medium text-slate-400 hover:text-emerald-400 transition-colors",
     },
+    {
+      to: "/camp/arch",
+      label: "Archemiste",
+      className: "font-medium text-slate-400 hover:text-emerald-400 transition-colors",
+    },
   ];
 
   return isCamp && (

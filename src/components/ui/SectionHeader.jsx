@@ -1,4 +1,4 @@
-import { cx } from "./classNames.js";
+import { cx } from "../../utils/classNames.js";
 
 /**
  * En-tête de section standard (petites capitales, espacement large,
