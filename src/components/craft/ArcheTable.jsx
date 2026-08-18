@@ -1,8 +1,9 @@
-import React, {useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import Slot from "../ui/dnd/Slot.jsx";
 import { motion, animate } from "framer-motion";
 import Button from "../ui/Button/Button.jsx";
 import Pintacle from "../ui/Pintacle.jsx";
+import Panel from "../ui/Panel.jsx";
 
 const randomizer_idle_gen = () => Array.from(
   { length: Math.floor(Math.random() * 8) + 2 },
@@ -13,8 +14,8 @@ const randomizer_idle_gen = () => Array.from(
 const radius = 150;
 const ORBIT_STEPS = 60; // plus de points = rotation plus fluide
 
-const variants = (state) => {
-  const { position, startAngle, turns = 1 } = state;
+const variants = (state={}) => {
+  const { position = {x: 0, y:0}, startAngle = 0, turns = 1 } = state;
 
   // Génère un tableau de valeurs le long du cercle, en partant de startAngle
   const genOrbit = (fn) =>
@@ -87,22 +88,26 @@ const variants = (state) => {
 
 
 const ArcheTable = (props) => {
-  const {className, children, nb, ...other} = props;
+  const {className, children, count=3, resources, result, action, onEraseSlot, ...other} = props;
   const [animation, setAnimation] = useState("appear");
 
-  const triggerAction = () => {
-    setAnimation("action");
-  };
+  useEffect(() => {
+    if(action) setAnimation("action");
+  }, [action]);
 
-  const count = 6
+  const reset = () => {
+    Array(count).fill(null).map((_, i) => onEraseSlot(i)); // reset les sots
+    setAnimation("appear");
+  }
+
 
   return (
-    <div className={"relative flex p-3 justify-center items-center w-full min-h-100 h-[33vh] border border-slate-700 bg-surface-panel rounded-2xl"} {...other}>
+    <div className={`relative flex p-3 justify-center items-center w-full min-h-100 h-[33vh] border border-slate-700 bg-surface-panel rounded-2xl ${className}`} {...other}>
       {
         Array(count).fill(null).map((_, i) => {
           const angle = i * 2 * Math.PI / count - Math.PI/2
           return <motion.div
-            className={"absolute"}
+            className={"absolute z-10"}
             variants={variants({
               position: {
                 x: radius * Math.cos(angle),
@@ -114,25 +119,31 @@ const ArcheTable = (props) => {
             initial="initial"
             animate={animation}
             onAnimationComplete={(definition) => {
-              if (definition === "appear") setAnimation("idle");
-
-              if (definition === "action") setAnimation("shine");
+              switch (definition){
+                case "appear": {
+                  setAnimation("idle")
+                  break
+                }
+                case "action": {
+                  setAnimation("shine")
+                }
+              }
             }}
           >
             <Slot
+              key={`archemsitery-${i}`}
+              resource={resources?.[i]}
+              onClick={resources?.[i] && animation === "idle" ? () => onEraseSlot(i) : undefined}
             />
           </motion.div>
         })
       }
       <Slot
-        className={"absolute"}
-        resource={{name: "empty"}}
+        className={"absolute z-20 bg-slate-800"}
+        onClick={animation === "shine" ? reset : undefined}
+        resource={result || {name: "empty"}}
       />
-      <Pintacle className={"absolute"} variant={"star"} sides={count}/>
-      <Button className={"absolute top-100"} onClick={() => setAnimation(v => {
-        if(v === "shine") return "appear"
-        return "action"
-      })}>click</Button>
+      <Pintacle className={"absolute min-w-4xl"} variant={count < 5 ? "line" : "star"} sides={count}/>
     </div>
   );
 }

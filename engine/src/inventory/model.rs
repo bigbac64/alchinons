@@ -20,11 +20,23 @@ impl Inventory {
         self.content.entry(resource).and_modify(|v| *v += quantity).or_insert(quantity);
     }
 
+    pub fn sub(&mut self, resource: Resource, quantity: u32) {
+        self.content.entry(resource).and_modify(|v| *v = v.saturating_sub(quantity)).or_insert(0);
+
+    }
+
     pub fn add_multi(&mut self, resources: HashMap<Resource, u32>){
         for (key, value) in resources {
             self.add(key, value)
         }
     }
+
+    pub fn sub_multi(&mut self, resources: HashMap<Resource, u32>){
+        for (key, value) in resources {
+            self.sub(key, value)
+        }
+    }
+
 
     pub fn merge(&mut self, other: Inventory) {
         for (key, value) in other.content {

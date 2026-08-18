@@ -9,6 +9,7 @@ export default function Slot({
   placeholder = null,
   layout = "tile",
   className = "",
+  onClick,
   ...other
 }) {
   const filled = !!resource;
@@ -18,11 +19,14 @@ export default function Slot({
     return (
       <li
         className={`
-          flex items-center justify-between px-4 py-2.5
+          flex items-center justify-between px-4 py-2.5 gap-3
+          ${onClick && "hover:bg-slate-800 cursor-pointer"}
           ${className}
         `}
+        onClick={onClick ? () => onClick(resource, placeholder) : () => {}}
+        {...other}
       >
-        <span className="flex items-center gap-2 text-slate-200">
+        <span className={`flex items-center gap-2 text-slate-200`}>
           <ResourceIcon resource={resource?.name} className="text-base" />
           {resource?.name}
         </span>
@@ -38,9 +42,11 @@ export default function Slot({
       className={`
         flex h-14 w-14 shrink-0 flex-col items-center justify-center gap-0.5
         rounded-lg border-2 select-none
+        ${onClick && "hover:bg-slate-800 cursor-pointer"}
         ${className}
         ${filled ? "border-emerald-600 bg-emerald-950/40" : "border-dashed border-slate-600 bg-slate-800/40"}
       `}
+      onClick={onClick ? () => onClick(resource, placeholder) : () => {}}
       {...other}
     >
       {filled ? (

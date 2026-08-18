@@ -6,6 +6,10 @@
     --color-surface-nav: #12192a;
 }
 
+* {
+    user-select: none;
+}
+
 body {
     background-color: var(--color-surface-app);
     overflow: hidden;

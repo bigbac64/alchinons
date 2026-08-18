@@ -4,7 +4,7 @@ use crate::resource::Resource;
 use crate::events::Event;
 use crate::state::GameState;
 
-pub fn execute(recipe: Recipe, inventory_name: String, states: &mut GameState) -> Vec<Event> {
+pub fn print_craft(recipe: Recipe, inventory_name: String, states: &mut GameState) -> Vec<Event> {
     let definition = recipe.definition();
     let inputs: HashMap<Resource, u32> = definition.inputs.iter().cloned().collect();
 
@@ -46,6 +46,33 @@ pub fn tick(states: &mut GameState) -> Vec<Event> {
     events
 }
 
+pub fn archimiste_craft(composant: Vec<Resource>, inventory_name: String, states: &mut GameState) -> Vec<Event> {
+    let removes: HashMap<Resource, u32> = composant.into_iter().fold(
+        HashMap::new(),
+        |mut acc, r| {
+            acc.entry(r).and_modify(|v| *v += 1).or_insert(1);
+            acc
+        },
+    );
+
+    let mut events = Vec::new();
+
+    if let Some(inventory) = states.inventory.get_by_name_mut(inventory_name.as_str()) {
+        if !inventory.has_all(&removes) {
+            return vec![Event::ArchimisteFailed];
+        }
+
+        inventory.sub_multi(removes);
+
+        events.push(Event::InventoryUpdated { changes: inventory.to_view() });
+    }
+
+
+    println!("element générer sur Alchimistery TODO Supplanté les nouvelles ressources (plus tard)");
+
+    events
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -55,7 +82,7 @@ mod tests {
         let mut states = GameState::new();
         states.inventory.player.add(Resource::Wood, 2);
 
-        let events = execute(Recipe::Plank, "player".to_string(), &mut states);
+        let events = print_craft(Recipe::Plank, "player".to_string(), &mut states);
 
         assert!(matches!(events.as_slice(), [Event::InventoryUpdated { .. }]));
         let view = states.inventory.player.to_view();
@@ -67,7 +94,7 @@ mod tests {
     fn craft_fails_without_enough_resources() {
         let mut states = GameState::new();
 
-        let events = execute(Recipe::Plank, "player".to_string(), &mut states);
+        let events = print_craft(Recipe::Plank, "player".to_string(), &mut states);
 
         assert!(matches!(events.as_slice(), [Event::CraftFailed { .. }]));
     }
@@ -77,7 +104,7 @@ mod tests {
         let mut states = GameState::new();
         states.inventory.player.add(Resource::Wood, 3);
 
-        execute(Recipe::Charcoal, "player".to_string(), &mut states);
+        print_craft(Recipe::Charcoal, "player".to_string(), &mut states);
 
         for _ in 0..Recipe::Charcoal.definition().duration - 1 {
             assert!(tick(&mut states).is_empty());

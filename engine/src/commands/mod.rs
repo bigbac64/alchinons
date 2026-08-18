@@ -3,7 +3,7 @@ pub mod outcome;
 use log::error;
 use serde::Deserialize;
 use crate::commands::outcome::Outcome;
-use crate::craft::command::{CraftPayload, GetRecipesPayload};
+use crate::craft::command::{ArchimisteCraftPayload, CraftPayload, GetRecipesPayload};
 use crate::gather::command::{GatherPayload, GatherSelectPayload};
 use crate::inventory::command::{GetInventoryPayload, TransferInventoryPayload};
 use crate::movement::command::MovePayload;
@@ -40,10 +40,13 @@ pub struct ResetSavePayload;
 
 #[derive(Deserialize)]
 pub enum Command {
+    // Resources
     ExploitablePlayerPosition(ExploitablePlayerPositionPayload),
     Exploitable(ExploitablePayload),
     Gather(GatherPayload),
     GatherSelect(GatherSelectPayload),
+    ArchimisteCraft(ArchimisteCraftPayload),
+
     Move(MovePayload),
     TransferInventory(TransferInventoryPayload),
     Craft(CraftPayload),
@@ -89,6 +92,7 @@ impl Command {
             Command::GetPlayer(payload) => payload.execute(states),
             Command::GetInventory(payload) => payload.execute(states),
             Command::GetProgression(payload) => payload.execute(states),
+            Command::ArchimisteCraft(payload) => payload.execute(states),
             Command::ResetSave(_) => {
                 error!("ResetSave doit être intercepté par GameEngine::execute avant Command::execute");
                 Outcome::none()

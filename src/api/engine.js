@@ -1,5 +1,6 @@
 import {listen} from "@tauri-apps/api/event";
 import {invoke} from "@tauri-apps/api/core";
+import inventory from "../components/inventory/Inventory.jsx";
 
 export const ENGINE_EVENT_CHANNEL = "engine://event";
 
@@ -60,6 +61,9 @@ export const getRecipes = () => sendCommand({ GetRecipes: null });
 
 export const craft = (recipe, inventory) =>
   sendCommand({ Craft: { recipe, inventory } });
+
+export const archimistCraft = (resources, inventory) =>
+  sendCommand({ ArchimisteCraft: { resources, inventory } });
 
 export const getProgression = () => sendCommand({ GetProgression: null });
 

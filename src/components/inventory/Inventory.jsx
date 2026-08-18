@@ -2,7 +2,7 @@ import Slot from "../ui/dnd/Slot.jsx";
 import Panel from "../ui/Panel.jsx";
 import SectionHeader from "../ui/SectionHeader.jsx";
 
-const Inventory = ({ className, inventory, name = "Inventaire", ...other }) => {
+const Inventory = ({ className, inventory, name = "Inventaire", onSelect, ...other }) => {
   return (
     <Panel className={className} {...other}>
       <div className="border-b border-slate-700 px-4 py-3">
@@ -11,7 +11,12 @@ const Inventory = ({ className, inventory, name = "Inventaire", ...other }) => {
       {inventory?.items?.length ? (
         <ul className="divide-y divide-slate-700/60">
           {inventory.items.map((item) => (
-            <Slot key={item.name} resource={item} layout="row" />
+            <Slot
+              key={item.name}
+              resource={item}
+              layout="row"
+              onClick={onSelect}
+            />
           ))}
         </ul>
       ) : (
